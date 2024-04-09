@@ -2,5 +2,7 @@ package com.jccv.tuprivadaapp.model;
 
 public enum Role {
     USER,
-    ADMIN
+    WORKER,
+    ADMIN,
+    SUPERADMIN
 }

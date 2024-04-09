@@ -3,8 +3,12 @@ package com.jccv.tuprivadaapp.service;
 import com.jccv.tuprivadaapp.jwt.model.AuthenticationResponse;
 import com.jccv.tuprivadaapp.model.Token;
 import com.jccv.tuprivadaapp.model.User;
+import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.TokenRepository;
 import com.jccv.tuprivadaapp.repository.UserRepository;
+import com.jccv.tuprivadaapp.repository.resident.ResidentRepository;
+import io.jsonwebtoken.JwtException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,6 +20,8 @@ import java.util.List;
 public class AuthenticationService {
 
     private final UserRepository repository;
+    @Autowired
+    private ResidentRepository residentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -24,6 +30,7 @@ public class AuthenticationService {
 
     public AuthenticationService(UserRepository repository, PasswordEncoder passwordEncoder, JwtService jwtService, TokenRepository tokenRepository, AuthenticationManager authenticationManager) {
         this.repository = repository;
+
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.tokenRepository = tokenRepository;
@@ -48,6 +55,23 @@ public class AuthenticationService {
         return new AuthenticationResponse(token);
     }
 
+    public AuthenticationResponse registerResident(User request){
+        Resident user = (Resident) User.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole())
+                .build();
+
+        user = residentRepository.save(user);
+
+        String token = jwtService.generateToken(user);
+        saveToken(user, token);
+
+        return new AuthenticationResponse(token);
+    }
+
     public AuthenticationResponse authenticate(User request){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -61,6 +85,12 @@ public class AuthenticationService {
         revokeAllTokensByUser(user);
         saveToken(user, token);
         return new AuthenticationResponse(token);
+    }
+
+    public boolean validateToken(Token token) {
+
+        return jwtService.isValid(token.getToken());
+
     }
 
     private void revokeAllTokensByUser(User user) {
@@ -80,4 +110,7 @@ public class AuthenticationService {
         tokenRepository.save(tokenToSave);
 
     }
+
+
+
 }

@@ -1,5 +1,5 @@
 package com.jccv.tuprivadaapp.model;
-
+import com.jccv.tuprivadaapp.model.resident.Resident;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,12 +16,13 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "first_name")
     private String firstName;
