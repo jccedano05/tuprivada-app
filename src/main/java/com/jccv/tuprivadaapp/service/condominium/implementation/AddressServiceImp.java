@@ -2,7 +2,9 @@ package com.jccv.tuprivadaapp.service.condominium.implementation;
 
 
 import com.jccv.tuprivadaapp.dto.condominium.AddressDto;
+import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
+import com.jccv.tuprivadaapp.model.User;
 import com.jccv.tuprivadaapp.model.condominium.Address;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.repository.condominium.AddressRepository;
@@ -22,8 +24,19 @@ public class AddressServiceImp implements AddressService {
     private CondominiumRepository condominiumRepository;
 
     public Address create(AddressDto addressDto) {
-        Condominium condominium = condominiumRepository.findById(addressDto.getCondominiumId()).orElseThrow(()-> new ResourceNotFoundException("Condominium not found"));
-        Address address = AddressDto.convertToAddress(addressDto, condominium);
+
+        Optional<Address> addressFounded =  addressRepository.findByCondominiumId(addressDto.getCondominiumId());
+        if(addressFounded.isPresent()){
+            throw new BadRequestException("Ya existe condominio ligado a esa direccion");
+        }
+
+        Condominium condominium = condominiumRepository.findById(addressDto.getCondominiumId()).orElseThrow(()-> new ResourceNotFoundException("Condominio no encontrado con el id: " + addressDto.getCondominiumId()));
+        Address address = AddressDto.convertToAddress(addressDto);
+        address.setCondominium(condominium);
+        System.out.println("addressDto");
+        System.out.println(addressDto.toString());
+        System.out.println("address");
+        System.out.println(address.toString());
         return addressRepository.save(address);
     }
 
@@ -39,7 +52,8 @@ public class AddressServiceImp implements AddressService {
     public Address update(AddressDto addressDto) {
         Condominium condominium = condominiumRepository.findById(addressDto.getCondominiumId()).orElseThrow(()-> new ResourceNotFoundException("Condominium not found"));
         addressRepository.findById(addressDto.getId()).orElseThrow(()-> new ResourceNotFoundException("Address not found"));
-        Address address = AddressDto.convertToAddress(addressDto, condominium);
+        Address address = AddressDto.convertToAddress(addressDto);
+        address.setCondominium(condominium);
         return addressRepository.save(address);
     }
 

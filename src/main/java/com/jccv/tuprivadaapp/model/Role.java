@@ -1,7 +1,7 @@
 package com.jccv.tuprivadaapp.model;
 
 public enum Role {
-    USER,
+    RESIDENT,
     WORKER,
     ADMIN,
     SUPERADMIN

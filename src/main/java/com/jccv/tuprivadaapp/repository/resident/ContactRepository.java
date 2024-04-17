@@ -18,3 +18,5 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
         """)
     Optional<List<Contact>> getAllContactsByResidentId(Long id);
 }
+
+

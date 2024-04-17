@@ -15,7 +15,7 @@ import static com.jccv.tuprivadaapp.utils.AuthorizationsLevel.CONDOMINIUM_LEVEL;
 import static com.jccv.tuprivadaapp.utils.AuthorizationsLevel.MAX_LEVEL;
 
 @RestController
-@RequestMapping("address")
+@RequestMapping("addresses")
 @PreAuthorize(CONDOMINIUM_LEVEL)
 public class AddressController {
 
@@ -25,34 +25,59 @@ public class AddressController {
 
     @PostMapping
     @PreAuthorize(MAX_LEVEL)
-    public ResponseEntity<Address> createAddress(@RequestBody AddressDto address) {
-        Address createdAddress = addressService.create( address);
+    public ResponseEntity<?> createAddress(@RequestBody AddressDto address) {
+        try{
+        Address createdAddress = addressService.create(address);
         return new ResponseEntity<>(createdAddress, HttpStatus.CREATED);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping
-    public ResponseEntity<List<Address>> getAllAddresses() {
+    public ResponseEntity<?> getAllAddresses() {
+        try{
         List<Address> addresses = addressService.findAll();
         return new ResponseEntity<>(addresses, HttpStatus.OK);
     }
+        catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Address> getAddressById(@PathVariable Long id) {
+    public ResponseEntity<?> getAddressById(@PathVariable Long id) {
+        try{
         Address address = addressService.findById(id);
         return new ResponseEntity<>(address, HttpStatus.OK);
     }
+        catch (Exception e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Address> updateAddress(@PathVariable Long id, @RequestBody AddressDto address) {
+    public ResponseEntity<?> updateAddress(@PathVariable Long id, @RequestBody AddressDto address) {
+        try{
         address.setId(id); // Asegúrate de establecer el ID del objeto Address
         Address updatedAddress = addressService.update(address);
         return new ResponseEntity<>(updatedAddress, HttpStatus.OK);
     }
+        catch (Exception e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+    }
 
     @DeleteMapping("/{id}")
     @PreAuthorize(MAX_LEVEL)
-    public ResponseEntity<Void> deleteAddress(@PathVariable Long id) {
+    public ResponseEntity<?> deleteAddress(@PathVariable Long id) {
+        try{
         addressService.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+        catch (Exception e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
     }
 }

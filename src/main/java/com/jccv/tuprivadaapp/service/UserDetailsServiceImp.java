@@ -1,6 +1,6 @@
 package com.jccv.tuprivadaapp.service;
 
-import com.jccv.tuprivadaapp.repository.UserRepository;
+import com.jccv.tuprivadaapp.repository.auth.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

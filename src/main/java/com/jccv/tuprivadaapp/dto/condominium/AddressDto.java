@@ -17,12 +17,12 @@ public class AddressDto {
     private String number;
     private String city;
     private String state;
-    private String postalCode;
+    private Integer postalCode;
 
     private Long condominiumId;
 
 
-    public static Address convertToAddress(AddressDto addressDto, Condominium condominium){
+    public static Address convertToAddress(AddressDto addressDto){
         return  Address.builder()
                 .id(addressDto.getId())
                 .street(addressDto.getStreet())
@@ -30,7 +30,7 @@ public class AddressDto {
                 .city(addressDto.getNumber())
                 .state(addressDto.getState())
                 .postalCode(addressDto.getPostalCode())
-                .condominium(condominium)
+                .postalCode(addressDto.getPostalCode())
                 .build();
     }
 }

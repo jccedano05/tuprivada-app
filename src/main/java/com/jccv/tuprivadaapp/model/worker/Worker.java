@@ -9,17 +9,16 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Builder
 @Entity
 @Table(name = "workers")
-public class Worker {
+public class Worker extends User {
 
-    @Id
-    private Long id; // Esta será la misma que la clave primaria de User
-
-    @OneToOne
-    @MapsId
-    @JsonBackReference
-//    @JoinColumn(name = "id")
-    private User user;
+//    @Id
+//    private Long id; // Esta será la misma que la clave primaria de User
+    private Long wokrr;
+//    @OneToOne
+//    @MapsId
+//    @JsonBackReference
+////    @JoinColumn(name = "id")
+//    private User user;
 }

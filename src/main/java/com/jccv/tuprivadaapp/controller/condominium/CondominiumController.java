@@ -6,12 +6,17 @@ import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.jccv.tuprivadaapp.utils.AuthorizationsLevel.MAX_LEVEL;
+import static com.jccv.tuprivadaapp.utils.AuthorizationsLevel.USER_LEVEL;
+
 @RestController
 @RequestMapping("condominiums")
+@PreAuthorize(MAX_LEVEL)
 public class CondominiumController {
 
     @Autowired
@@ -40,6 +45,7 @@ public class CondominiumController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(USER_LEVEL)
     public ResponseEntity<?> getCondominiumById(@PathVariable Long id) {
         try {
             Condominium condominium = condominiumService.findById(id);
@@ -71,8 +77,5 @@ public class CondominiumController {
     }
 
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleException(Exception e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+
 }

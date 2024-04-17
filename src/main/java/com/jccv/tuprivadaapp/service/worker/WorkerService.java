@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface WorkerService {
 
 
-    public WorkerResponseDto createWorker(WorkerRequestDto worker);
+//    public WorkerResponseDto createWorker(WorkerRequestDto worker);
     public List<WorkerResponseDto> findAllWorkers();
 }

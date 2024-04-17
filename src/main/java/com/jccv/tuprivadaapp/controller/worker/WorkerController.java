@@ -25,12 +25,14 @@ public class WorkerController {
     *
     * Crear una funcion que ayude a dar la jerarquia de autoridades (osea que si un worker puede usarlo, el admin y super admin que estan arriba de el tambien)
     * */
-    @PostMapping
-    @PreAuthorize(CONDOMINIUM_LEVEL)
-    public ResponseEntity<WorkerResponseDto> createWorker(@RequestBody WorkerRequestDto request){
-        WorkerResponseDto workedSaved = workerService.createWorker(request);
-        return ResponseEntity.ok(workedSaved);
-    }
+//    @PostMapping
+//    @PreAuthorize(CONDOMINIUM_LEVEL)
+//    public ResponseEntity<WorkerResponseDto> createWorker(@RequestBody WorkerRequestDto request){
+//        WorkerResponseDto workedSaved = workerService.createWorker(request);
+//        return ResponseEntity.ok(workedSaved);
+//    }
+
+
 
     @GetMapping
     public ResponseEntity<List<WorkerResponseDto>> findAllWorkers(){

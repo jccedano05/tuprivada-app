@@ -1,10 +1,12 @@
-package com.jccv.tuprivadaapp.repository;
+package com.jccv.tuprivadaapp.repository.auth;
 
 import com.jccv.tuprivadaapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public interface UserRepository extends JpaRepository<User,Long> {
 
     Optional<User> findByUsername(String username);

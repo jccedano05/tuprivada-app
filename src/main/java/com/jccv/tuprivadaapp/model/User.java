@@ -1,6 +1,9 @@
 package com.jccv.tuprivadaapp.model;
+import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,16 +28,28 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(name = "first_name")
+    @NotBlank(message = "El nombre no puede estar vacío")
     private String firstName;
+
     @Column(name = "last_name")
+    @NotBlank(message = "El apellido no puede estar vacío")
     private String lastName;
-    @Column(name = "username")
+
+    @Column(name = "username", unique = true)
+    @NotBlank(message = "El username no puede estar vacío")
     private String username;
+
     @Column(name = "password")
+    @NotBlank(message = "La contraseña no puede estar vacía")
     private String password;
 
     @Enumerated(value = EnumType.STRING)
+    @Valid()
     private Role role;
+
+    @ManyToOne
+    @JoinColumn(name = "condominium_id")
+    private Condominium condominium;
 
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
