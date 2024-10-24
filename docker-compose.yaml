@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: tuprivada
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: cedano123321
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+#    networks:
+#      - backend-net  # Asegúrate de que el servicio esté en la red backend-net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tuprivada
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: cedano123321
+      JWT_SECRET_KEY: 237270aff7bec8705312cf6353fbd7d05284d2c6f9cf2c37de675ee57ae9d133  # JWT secret key
+#      SERVER_SSL_KEY_STORE: /app/cert/aynicomunidad.p12  # Ruta dentro del contenedor
+#      SERVER_SSL_KEY_STORE_PASSWORD: cedano123321
+#      SERVER_SSL_KEY_STORE_TYPE: PKCS12
+#      SERVER_SSL_KEY_ALIAS: aynicomunidad
+#      key-password: cedano123321
+#    volumes:
+#      - /home/ubuntu/ayniComunidad/backend/cert:/app/cert  # Montamos el directorio del keystore en el contenedor
+#    networks:
+#      - backend-net  # Asegúrate de que el servicio esté en la red backend-net
+#
+#  nginx:
+#    image: nginx:latest
+#    container_name: nginx
+#    ports:
+#      - "8082:80"  # Cambié el puerto de la máquina host (8082) a 80 dentro del contenedor
+#      - "8443:443"
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf  # Montar la configuración de Nginx
+#      - /etc/letsencrypt:/etc/letsencrypt:ro
+#    #      - /home/ubuntu/ayniComunidad/backend/nginx.conf:/etc/nginx/nginx.conf
+#    depends_on:
+#      - app
+#    networks:
+#      - backend-net
+#
+#networks:
+#  backend-net:
+#    driver: bridge  # Usa el driver de red 'bridge' para la red personalizad
+
+volumes:
+  postgres_data:
