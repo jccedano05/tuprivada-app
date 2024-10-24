@@ -1,4 +1,8 @@
 package com.jccv.tuprivadaapp.model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import jakarta.persistence.*;
@@ -19,7 +23,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
+@JsonIgnoreProperties(value = {"condominium"})
 public class User implements UserDetails {
 
     @Id
@@ -47,11 +51,13 @@ public class User implements UserDetails {
     @Valid()
     private Role role;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "condominium_id")
     private Condominium condominium;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @JsonManagedReference  // Este lado se serializa
     private List<Token> tokens;
 
     @Override

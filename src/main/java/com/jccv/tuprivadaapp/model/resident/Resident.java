@@ -3,9 +3,12 @@ package com.jccv.tuprivadaapp.model.resident;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jccv.tuprivadaapp.model.User;
+import com.jccv.tuprivadaapp.model.condominium.Condominium;
+import com.jccv.tuprivadaapp.model.contact.Contact;
+import com.jccv.tuprivadaapp.model.payment.Payment;
+import com.jccv.tuprivadaapp.model.recurring_payment.RecurringPayment;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -14,12 +17,47 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 @Entity
+@Builder
 @Table(name = "residents")
-//@PrimaryKeyJoinColumn(name = "id") // Utilizamos una columna de clave primaria para la herencia
-public class Resident extends User {
+public class Resident  {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "is_active_resident")
+    private boolean isActiveResident = true;
+
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
 
-    @JsonManagedReference
+    @OneToOne(mappedBy = "resident",fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true) // Agregar cascade y orphanRemoval si aplica
+//    @JsonManagedReference  // Este lado se serializa
+    private AddressResident addressResident;
+
+
+    @JsonIgnore
     @OneToMany(mappedBy = "resident", cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
     private List<Contact> contacts;
+
+
+    @ManyToOne
+    @JoinColumn(name = "condominium_id")
+    private Condominium condominium;
+
+
+    @ManyToMany(mappedBy = "residents")  // La relación inversa, mapea a la lista "residents" de RecurringPayment
+    @JsonManagedReference  // Este lado se serializa
+    private List<RecurringPayment> recurringPayments;
+
+    @OneToMany(mappedBy = "resident", cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
+    @JsonManagedReference  // Este lado se serializa
+    private List<Payment> payments;
+
+
+
+
+
 }

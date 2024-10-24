@@ -3,13 +3,13 @@ package com.jccv.tuprivadaapp.jwt.model;
 
 public class AuthenticationResponse {
 
-    final private String token;
+    private final String token;
+    public String getToken() {
+        return token;
+    }
 
     public AuthenticationResponse(String token) {
         this.token = token;
     }
 
-    public String getToken() {
-        return token;
-    }
 }

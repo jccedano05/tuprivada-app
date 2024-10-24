@@ -1,9 +1,9 @@
 package com.jccv.tuprivadaapp.service.resident.implementation;
 
-import com.jccv.tuprivadaapp.model.resident.Contact;
 import com.jccv.tuprivadaapp.model.resident.PaymentResident;
 import com.jccv.tuprivadaapp.repository.resident.dto.PaymentResidentDto;
 import com.jccv.tuprivadaapp.repository.resident.facade.PaymentResidentFacade;
+import com.jccv.tuprivadaapp.repository.resident.mapper.PaymentResidentMapper;
 import com.jccv.tuprivadaapp.service.resident.PaymentResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,10 +16,12 @@ public class PaymentResidentServiceImp implements PaymentResidentService {
 
     @Autowired
     private PaymentResidentFacade paymentFacade;
+    @Autowired
+    private PaymentResidentMapper paymentResidentMapper;
     @Override
     public PaymentResidentDto getPaymentResidentById(Long id) {
         PaymentResident payment = paymentFacade.findPaymentById(id);
-        PaymentResidentDto dto = PaymentResidentDto.paymentModelToDto(payment);
+        PaymentResidentDto dto = paymentResidentMapper.paymentModelToDto(payment);
         return dto;
     }
 

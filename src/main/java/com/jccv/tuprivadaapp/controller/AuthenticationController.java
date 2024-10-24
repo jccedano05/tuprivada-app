@@ -4,6 +4,7 @@ import com.jccv.tuprivadaapp.dto.auth.UserDto;
 import com.jccv.tuprivadaapp.dto.auth.UserUpdateByAdminDto;
 import com.jccv.tuprivadaapp.dto.auth.UserUpdateBySuperadminDto;
 import com.jccv.tuprivadaapp.dto.auth.UserUpdateDto;
+import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.model.Role;
 import com.jccv.tuprivadaapp.model.Token;
 import com.jccv.tuprivadaapp.model.User;
@@ -28,8 +29,11 @@ public class AuthenticationController {
     public ResponseEntity<?> register(@RequestBody UserDto request) {
         try {
             return ResponseEntity.ok(authenticationService.register(request));
-        } catch (Exception e) {
+        } catch (BadRequestException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -104,10 +108,10 @@ public class AuthenticationController {
 
 
 
-    @PostMapping("/login")
+    @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody User request) {
         try {
-
+            System.out.println("Request");
             return ResponseEntity.ok(authenticationService.authenticate(request));
 
         } catch (Exception e) {
@@ -115,9 +119,18 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/validateToken")
-    public ResponseEntity<?> validateToken(@RequestBody Token token) {
-        System.out.println("token Jwt Controller: " + token);
-        return ResponseEntity.ok(authenticationService.validateToken(token));
+    @GetMapping("/validateToken")
+    public ResponseEntity<?> validateToken(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        String token = "";
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+             token = authorizationHeader.substring(7); // Elimina el prefijo "Bearer "
+        }
+            return ResponseEntity.ok(authenticationService.validateToken(token));
     }
+
+//    @GetMapping("/validateToken")
+//    public ResponseEntity<?> validateToken(@RequestBody Token token) {
+//        System.out.println("token Jwt Controller: " + token);
+//        return ResponseEntity.ok(authenticationService.validateToken(token));
+//    }
 }

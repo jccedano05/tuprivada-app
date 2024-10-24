@@ -16,6 +16,8 @@ public class AddressDto {
     private String street;
     private String number;
     private String city;
+    private String nameCommunity;
+    private String nameSuburb;
     private String state;
     private Integer postalCode;
 
@@ -27,9 +29,10 @@ public class AddressDto {
                 .id(addressDto.getId())
                 .street(addressDto.getStreet())
                 .number(addressDto.getNumber())
-                .city(addressDto.getNumber())
+                .nameCommunity(addressDto.getNameCommunity())
+                .nameSuburb(addressDto.getNameSuburb())
+                .city(addressDto.getCity())
                 .state(addressDto.getState())
-                .postalCode(addressDto.getPostalCode())
                 .postalCode(addressDto.getPostalCode())
                 .build();
     }

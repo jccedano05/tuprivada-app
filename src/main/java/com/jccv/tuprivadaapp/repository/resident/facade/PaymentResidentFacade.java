@@ -6,6 +6,7 @@ import com.jccv.tuprivadaapp.model.resident.PaymentResident;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.resident.PaymentResidentRepository;
 import com.jccv.tuprivadaapp.repository.resident.dto.PaymentResidentDto;
+import com.jccv.tuprivadaapp.repository.resident.mapper.PaymentResidentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,9 @@ public class PaymentResidentFacade {
     @Autowired
     private ResidentFacade residentFacade;
 
+    @Autowired
+    private PaymentResidentMapper paymentResidentMapper;
+
 
     public PaymentResident findPaymentById(Long paymentId){
         return paymentResidentRepository.findById(paymentId).orElseThrow(() -> new ResourceNotFoundException("referencia de pago no encontrado"));
@@ -28,14 +32,12 @@ public class PaymentResidentFacade {
 
     public List<PaymentResidentDto> findAllPaymentsByResidentId(Long residentId){
         List<PaymentResident> paymentsResident = paymentResidentRepository.findAllPaymentResidentByResidentId(residentId).orElseThrow(() -> new ResourceNotFoundException("pago de residente no encontrado"));
-        return paymentsResident.stream().map(payment -> PaymentResidentDto.paymentModelToDto(payment)).collect(Collectors.toList());
+        return paymentsResident.stream().map(payment -> paymentResidentMapper.paymentModelToDto(payment)).collect(Collectors.toList());
     }
 
     public List<PaymentResidentDto> findAllPaymentsByCondominiumId(Long condominiumId){
-        System.out.println("condominiumId");
-        System.out.println(condominiumId);
         List<PaymentResident> paymentsResident = paymentResidentRepository.findAllPaymentResidentByCondominiumId(condominiumId).orElseThrow(() -> new ResourceNotFoundException("pago de residente no encontrado"));
-        return paymentsResident.stream().map(payment -> PaymentResidentDto.paymentModelToDto(payment)).collect(Collectors.toList());
+        return paymentsResident.stream().map(payment -> paymentResidentMapper.paymentModelToDto(payment)).collect(Collectors.toList());
     }
 
 
@@ -45,9 +47,9 @@ public class PaymentResidentFacade {
         }
 
         Resident  resident = residentFacade.findResidentById(paymentDto.getResidentId());
-        PaymentResident paymentResident = PaymentResidentDto.paymentDtoToModel(paymentDto, resident);
+        PaymentResident paymentResident = paymentResidentMapper.paymentDtoToModel(paymentDto, resident);
         paymentResident = paymentResidentRepository.save(paymentResident);
-        return PaymentResidentDto.paymentModelToDto(paymentResident);
+        return paymentResidentMapper.paymentModelToDto(paymentResident);
     }
 
 

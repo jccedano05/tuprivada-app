@@ -1,10 +1,12 @@
 package com.jccv.tuprivadaapp.service.condominium.implementation;
 
+import com.jccv.tuprivadaapp.dto.acoountBank.AccountBankDto;
 import com.jccv.tuprivadaapp.dto.condominium.CondominiumDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.condominium.Address;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.repository.condominium.CondominiumRepository;
+import com.jccv.tuprivadaapp.service.accountBank.AccountBankService;
 import com.jccv.tuprivadaapp.service.condominium.AddressService;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +17,18 @@ import java.util.List;
 @Service
 public class CondominiumServiceImp implements CondominiumService {
 
-    @Autowired
     private CondominiumRepository condominiumRepository;
 
-    @Autowired
-    private AddressService addressService;
+    private final AddressService addressService;
 
+    private final AccountBankService accountBankService;
+
+    @Autowired
+    public CondominiumServiceImp(CondominiumRepository condominiumRepository, AddressService addressService, AccountBankService accountBankService) {
+        this.condominiumRepository = condominiumRepository;
+        this.addressService = addressService;
+        this.accountBankService = accountBankService;
+    }
 
 
     public Condominium create(CondominiumDto condominiumDto) {
@@ -54,4 +62,6 @@ public class CondominiumServiceImp implements CondominiumService {
     public void deleteById(Long id) {
         condominiumRepository.deleteById(id);
     }
+
+
 }

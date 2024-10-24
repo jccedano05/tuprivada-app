@@ -1,114 +1,174 @@
 package com.jccv.tuprivadaapp.service;
 
-import com.jccv.tuprivadaapp.dto.auth.UserDto;
-import com.jccv.tuprivadaapp.dto.auth.UserUpdateByAdminDto;
-import com.jccv.tuprivadaapp.dto.auth.UserUpdateBySuperadminDto;
-import com.jccv.tuprivadaapp.dto.auth.UserUpdateDto;
+import com.jccv.tuprivadaapp.dto.auth.*;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
-import com.jccv.tuprivadaapp.jwt.model.AuthenticationResponse;
 import com.jccv.tuprivadaapp.model.Role;
 import com.jccv.tuprivadaapp.model.Token;
 import com.jccv.tuprivadaapp.model.User;
 import com.jccv.tuprivadaapp.model.admin.Admin;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.model.resident.Resident;
-import com.jccv.tuprivadaapp.model.worker.Worker;
 import com.jccv.tuprivadaapp.repository.TokenRepository;
-import com.jccv.tuprivadaapp.repository.admin.facade.AdminFacade;
-import com.jccv.tuprivadaapp.repository.auth.UserRepository;
-import com.jccv.tuprivadaapp.repository.admin.AdminRepository;
-import com.jccv.tuprivadaapp.repository.resident.ResidentRepository;
-import com.jccv.tuprivadaapp.repository.resident.facade.ResidentFacade;
-import com.jccv.tuprivadaapp.repository.worker.WorkerRepository;
-import com.jccv.tuprivadaapp.repository.worker.facade.WorkerFacade;
+import com.jccv.tuprivadaapp.service.admin.AdminService;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
 import com.jccv.tuprivadaapp.repository.auth.facade.UserFacade;
+import com.jccv.tuprivadaapp.service.resident.ResidentService;
+import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AuthenticationService {
 
-    @Autowired
-    private UserRepository repository;
+
+     private final PasswordEncoder passwordEncoder;
+
+     private final JwtService jwtService;
+
+     private final UserDto userDto;
+
+
+     private final UserFacade userFacade;
+
+     private final CondominiumService condominiumService;
+
+     private final TokenRepository tokenRepository;
+
+    private final AuthenticationManager authenticationManager;
+    private final AuthorizationService authorizationService;
+
+    private final ResidentService residentService;
+    private final AdminService adminService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private UserDto userDto;
+    public AuthenticationService(PasswordEncoder passwordEncoder, JwtService jwtService, UserDto userDto, UserFacade userFacade, CondominiumService condominiumService, TokenRepository tokenRepository, AuthenticationManager authenticationManager, AuthorizationService authorizationService, ResidentService residentService, AdminService adminService) {
 
-    @Autowired
-    private UserFacade userFacade;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.userDto = userDto;
+        this.userFacade = userFacade;
+        this.condominiumService = condominiumService;
+        this.tokenRepository = tokenRepository;
+        this.authenticationManager = authenticationManager;
+        this.authorizationService = authorizationService;
+        this.residentService = residentService;
+        this.adminService = adminService;
+    }
 
-    @Autowired
-    private CondominiumService condominiumService;
-    @Autowired
-    private TokenRepository tokenRepository;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-
-
-
-    public AuthenticationResponse register(UserDto request) {
-        if (request.getUsername() == null) {
-            throw new ResourceNotFoundException("El campo usuario no debe quedar vacio");
-        }
-        Optional<User> userFounded = repository.findByUsername(request.getUsername());
-
-        if (userFounded.isPresent()) {
-            throw new BadRequestException("El usuario ya existe");
-        }
-        if(request.getRole() != Role.SUPERADMIN && request.getCondominiumId() == null){
-            throw new BadRequestException("Para crear este tipo de usuario debes asignarle un condominiumId");
-        }
-        User user;
-        switch (request.getRole()) {
-            case SUPERADMIN: {
-                user = buildUser(request, new User());
-                user = userFacade.save(user, request);
-                break;
-            }
-            case ADMIN: {
-                Admin admin = buildUser(request, new Admin());
-                user = userFacade.saveAdmin(admin);
-                break;
-            }
-            case RESIDENT: {
-                Resident resident = buildUser(request, new Resident());
-                user = userFacade.saveResident(resident);
-                break;
-            }
-            case WORKER: {
-                Worker worker = buildUser(request, new Worker());
-                user = userFacade.saveWorker(worker);
-                break;
-            }
-            default: {
-                throw new BadRequestException("Rol no soportado, elegir rol correcto");
-            }
-        }
-
+    public AuthenticatedUserDto register(UserDto request) {
+        //validar que solo SuperAdmins, Admins puedan crear usuarios
+//        authorizationService.verifyAuthorityToUpdate(userDto.convertUserDtoToUser(request));
+        validateRequest(request);
+        User user = createUserByRole(request);
         String token = jwtService.generateToken(user);
         saveToken(user, token);
+        return authenticatedUserResponse(user, token);
+    }
 
-        return new AuthenticationResponse(token);
+    private void validateRequest(UserDto request) {
+        if (request.getUsername() == null) {
+            throw new ResourceNotFoundException("El campo usuario no debe quedar vacío");
+        }
+
+        if (userFacade.isUsernameExist(request.getUsername())) {
+            throw new BadRequestException("El usuario ya existe");
+        }
+
+        if (request.getRole() != Role.SUPERADMIN && request.getCondominiumId() == null) {
+            throw new BadRequestException("Para crear este tipo de usuario debes asignarle un condominiumId");
+        }
+    }
+
+    @Transactional
+    private User createUserByRole(UserDto request) {
+        try{
+        User user = userFacade.save(buildUser(request, new User()));
+            switch (request.getRole()) {
+                case RESIDENT: {
+                    residentService.saveResident(Resident.builder()
+                            .user(user)
+                                    .isActiveResident(true)
+                                    .condominium(condominiumService.findById(request.getCondominiumId()))
+                            .build());
+                    return user;
+                }
+                case ADMIN: {
+                    adminService.saveAdmin(Admin.builder()
+                            .user(user)
+                            .isActive(true)
+                            .condominium(condominiumService.findById(request.getCondominiumId()))
+                            .build());
+                    return user;
+                }
+                default:
+                {
+                    throw new BadRequestException("Rol no soportado, elegir rol correcto");
+                }
+            }
+        }catch (Exception e) {
+                // Si ocurre un error, lanzamos una excepción para que la transacción sea revertida
+            System.out.println(e);
+            throw new BadRequestException("Rol no soportado, elegir rol correcto");
+            }
     }
 
 
+//    public AuthenticatedUserDto register(UserDto request) {
+//        if (request.getUsername() == null) {
+//            throw new ResourceNotFoundException("El campo usuario no debe quedar vacio");
+//        }
+//        Optional<User> userFounded = repository.findByUsername(request.getUsername());
+//
+//        if (userFounded.isPresent()) {
+//            throw new BadRequestException("El usuario ya existe");
+//        }
+//        if(request.getRole() != Role.SUPERADMIN && request.getCondominiumId() == null){
+//            throw new BadRequestException("Para crear este tipo de usuario debes asignarle un condominiumId");
+//        }
+//        User user;
+//        switch (request.getRole()) {
+//            case SUPERADMIN: {
+//                user = buildUser(request, new User());
+//                user = userFacade.save(user, request);
+//                break;
+//            }
+//            case ADMIN: {
+//                Admin admin = buildUser(request, new Admin());
+//                user = userFacade.saveAdmin(admin);
+//                break;
+//            }
+//            case RESIDENT: {
+//                Resident resident = buildUser(request, new Resident());
+//                user = userFacade.saveResident(resident);
+//                break;
+//            }
+//            case WORKER: {
+//                Worker worker = buildUser(request, new Worker());
+//                user = userFacade.saveWorker(worker);
+//                break;
+//            }
+//            default: {
+//                throw new BadRequestException("Rol no soportado, elegir rol correcto");
+//            }
+//        }
+//
+//        String token = jwtService.generateToken(user);
+//        saveToken(user, token);
+//
+//        return authenticatedUserResponse(user, token);
+////        return new AuthenticationResponse(token);
+//    }
+
+
     private <T extends User> T buildUser(UserDto request, T user) {
+        user.setId(request.getId());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setUsername(request.getUsername());
@@ -118,13 +178,11 @@ public class AuthenticationService {
             Condominium condominium = condominiumService.findById(request.getCondominiumId());
             user.setCondominium(condominium);
         }
-        System.out.println("user");
-        System.out.println(user.toString());
         return user;
     }
 
 
-    public AuthenticationResponse authenticate(User request) {
+    public AuthenticatedUserDto authenticate(User request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
@@ -132,11 +190,23 @@ public class AuthenticationService {
                 )
         );
 
-        User user = repository.findByUsername(request.getUsername()).orElseThrow(() -> new ResourceNotFoundException("Usuario y/o Contraseña incorrecta"));
+        User user = userFacade.findByUsername(request.getUsername());
         String token = jwtService.generateToken(user);
         revokeAllTokensByUser(user);
         saveToken(user, token);
-        return new AuthenticationResponse(token);
+        return authenticatedUserResponse(user, token);
+//        return new AuthenticationResponse(token);
+    }
+
+    private AuthenticatedUserDto authenticatedUserResponse(User user, String token){
+        return AuthenticatedUserDto.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .token(token)
+                .role(user.getRole())
+                .condominium(user.getCondominium())
+                .build();
     }
 
 
@@ -145,7 +215,7 @@ public class AuthenticationService {
 
         User user = userFacade.findById(userId);
 
-        verifyAuthorityToUpdate(user);
+        authorizationService.verifyAuthorityToUpdate(user);
 
         if(request.getFirstName() != null){
             user.setFirstName(request.getFirstName());
@@ -164,7 +234,7 @@ public class AuthenticationService {
         User user = userFacade.findById(userId);
 
 
-        verifyAuthorityToUpdate(user);
+        authorizationService.verifyAuthorityToUpdate(user);
 
         if(request.getFirstName() != null){
             user.setFirstName(request.getFirstName());
@@ -187,7 +257,7 @@ public class AuthenticationService {
 
         User user = userFacade.findById(userId);
 
-        verifyAuthorityToUpdate(user);
+        authorizationService.verifyAuthorityToUpdate(user);
 
         if(request.getFirstName() != null){
             user.setFirstName(request.getFirstName());
@@ -206,32 +276,37 @@ public class AuthenticationService {
     }
 
 
-    private void verifyAuthorityToUpdate(User userToUpdate){
-        if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            User user= repository.findByUsername( SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new BadRequestException("No se encontro el user de la cuenta"));
-            //If your condominium is not the same than the user to update, you must be a super admin, also condominium must not be null
-            if(user.getCondominium() !=userToUpdate.getCondominium() && user.getCondominium() == null) {
-                if(!user.getRole().equals(Role.SUPERADMIN)) {
-                    throw new BadRequestException("Credenciales no validas para hacer el update");
-                }
-            }
-            // If you are not a SuperAdmin or Admin, only could modify you
-            if(user.getUsername() !=userToUpdate.getUsername() && !user.getRole().equals(Role.ADMIN)) {
-                if(!user.getRole().equals(Role.SUPERADMIN)){
-                    throw new BadRequestException("Credenciales no validas para hacer el update");
-                }
-            }
-            //If you no are SUPER ADMIN, Can't modify a SuperAdmin user
-            if(Role.SUPERADMIN ==userToUpdate.getRole() && user.getRole() != Role.SUPERADMIN) {
-                throw new BadRequestException("Credenciales no validas para hacer el update");
-            }
+//    private void verifyAuthorityToUpdate(User userToUpdate){
+//        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+//            User user= repository.findByUsername( SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new BadRequestException("No se encontro el user de la cuenta"));
+//            //If your condominium is not the same than the user to update, you must be a super admin, also condominium must not be null
+//            if(user.getCondominium() !=userToUpdate.getCondominium() && user.getCondominium() == null) {
+//                if(!user.getRole().equals(Role.SUPERADMIN)) {
+//                    throw new BadRequestException("Credenciales no validas para hacer el update");
+//                }
+//            }
+//            // If you are not a SuperAdmin or Admin, only could modify you
+//            if(user.getUsername() !=userToUpdate.getUsername() && !user.getRole().equals(Role.ADMIN)) {
+//                if(!user.getRole().equals(Role.SUPERADMIN)){
+//                    throw new BadRequestException("Credenciales no validas para hacer el update");
+//                }
+//            }
+//            //If you no are SUPER ADMIN, Can't modify a SuperAdmin user
+//            if(Role.SUPERADMIN ==userToUpdate.getRole() && user.getRole() != Role.SUPERADMIN) {
+//                throw new BadRequestException("Credenciales no validas para hacer el update");
+//            }
+//        }
+//    }
+
+
+    public AuthenticatedUserDto validateToken(String token) {
+        if(jwtService.isValid(token)){
+            String username = jwtService.extractUsername(token);
+           User user =  userFacade.findByUsername(username);
+           return authenticatedUserResponse(user, token);
         }
-    }
-
-
-    public boolean validateToken(Token token) {
-
-        return jwtService.isValid(token.getToken());
+        throw new JwtException("Token no valid");
+//        return jwtService.isValid(token.getToken());
 
     }
 

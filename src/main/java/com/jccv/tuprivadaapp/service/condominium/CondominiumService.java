@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.condominium;
 
+import com.jccv.tuprivadaapp.dto.acoountBank.AccountBankDto;
 import com.jccv.tuprivadaapp.dto.condominium.CondominiumDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
@@ -17,4 +18,5 @@ public interface CondominiumService {
     public Condominium update(CondominiumDto condominiumDto);
 
     public void deleteById(Long id);
+
 }

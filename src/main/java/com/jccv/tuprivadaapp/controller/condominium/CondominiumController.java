@@ -24,6 +24,7 @@ public class CondominiumController {
 
 
 
+
     @PostMapping
     public ResponseEntity<?> createCondominium(@RequestBody CondominiumDto condominium) {
         try {

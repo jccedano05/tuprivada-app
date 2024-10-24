@@ -41,21 +41,16 @@ public class JwtService {
     public String extractUsername(String token){
         try {
             return extractClaim(token, Claims::getSubject);
-
     } catch (SignatureException e) {
             logger.debug("signature exception"+e);
         } catch (MalformedJwtException e) {
             logger.debug("token malformed"+e);
-
         } catch (ExpiredJwtException e) {
             logger.debug("token expired"+e);
-
         } catch (UnsupportedJwtException e) {
             logger.debug("unsupported"+e);
-
         } catch (IllegalArgumentException e) {
             logger.debug("Illegal"+e);
-
         }
     return null;
     }
@@ -125,7 +120,6 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
             return claims;
-
     }
 
     public String generateToken(User user){
@@ -135,8 +129,6 @@ public class JwtService {
                 .expiration(new Date( System.currentTimeMillis() + Long.parseLong(timeExpiration)))
                 .signWith(getSigninKey())
                 .compact();
-
-
     }
 
 

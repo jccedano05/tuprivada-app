@@ -1,13 +1,9 @@
 package com.jccv.tuprivadaapp.controller.resident;
 
-import com.jccv.tuprivadaapp.dto.condominium.CondominiumDto;
-import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
-import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.repository.resident.dto.PaymentResidentDto;
 import com.jccv.tuprivadaapp.service.resident.PaymentResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

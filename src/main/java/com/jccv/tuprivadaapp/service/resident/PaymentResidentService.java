@@ -1,10 +1,8 @@
 package com.jccv.tuprivadaapp.service.resident;
 
-import com.jccv.tuprivadaapp.model.resident.Contact;
 import com.jccv.tuprivadaapp.repository.resident.dto.PaymentResidentDto;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface PaymentResidentService {
 

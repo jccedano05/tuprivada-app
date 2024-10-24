@@ -34,49 +34,6 @@ public class PaymentResidentDto {
     private Long residentId;
 
 
-    public static PaymentResident paymentDtoToModel(PaymentResidentDto dto) {
-        LocalDate date = LocalDate.now();
-        LocalDate expirationDate = LocalDate.now().plusDays(15);
-
-        if(dto.getExpirationDate() != null){
-            expirationDate = dto.getExpirationDate();
-        }
-        if(dto.getDate() != null){
-            date = dto.getDate();
-        }
-        PaymentResident paymentResident = PaymentResident.builder()
-                .id(dto.getId())
-                .amount(dto.getAmount())
-                .date(date)
-                .expirationDate(expirationDate)
-                .isComplete(dto.isComplete())
-                .build();
-
-        return paymentResident;
-    }
-    public static PaymentResident paymentDtoToModel(PaymentResidentDto dto, Resident resident) {
-        PaymentResident paymentResident = paymentDtoToModel(dto);
-        paymentResident.setResident(resident);
-
-        return paymentResident;
-    }
-
-    public static PaymentResidentDto paymentModelToDto(PaymentResident paymentResident) {
-        Long residentId = null;
-        if(paymentResident.getResident() != null){
-            residentId = paymentResident.getResident().getId();
-        }
-        PaymentResidentDto dto = PaymentResidentDto.builder()
-                .id(paymentResident.getId())
-                .amount(paymentResident.getAmount())
-                .date(paymentResident.getDate())
-                .expirationDate(paymentResident.getExpirationDate())
-                .isComplete(paymentResident.isComplete())
-                .residentId(residentId)
-                .build();
-
-        return dto;
-    }
 
 
 }

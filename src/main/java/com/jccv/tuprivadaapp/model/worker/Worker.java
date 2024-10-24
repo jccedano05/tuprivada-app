@@ -11,14 +11,13 @@ import lombok.*;
 @ToString
 @Entity
 @Table(name = "workers")
-public class Worker extends User {
+public class Worker  {
 
-//    @Id
-//    private Long id; // Esta será la misma que la clave primaria de User
-    private Long wokrr;
-//    @OneToOne
-//    @MapsId
-//    @JsonBackReference
-////    @JoinColumn(name = "id")
-//    private User user;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

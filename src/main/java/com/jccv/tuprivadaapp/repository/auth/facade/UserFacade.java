@@ -16,68 +16,84 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class UserFacade {
 
-    @Autowired
-    private UserRepository userRepository;
+    private static final String SUPERADMIN = "SUPERADMIN";
+    private static final String ADMIN = "ADMIN";
+    private static final String MESSAGE_USER_EXCEPTION = "Usuario no encontrado";
+    private static final String MESSAGE_BAD_REQUEST_EXCEPTION = "No tienes los privilegios para esta operación";
+
+    private final UserRepository userRepository;
+    private final AdminFacade adminFacade;
+    private final ResidentFacade residentFacade;
+    private final WorkerFacade workerFacade;
+
+
 
     @Autowired
-    private AdminFacade adminFacade;
-
-    @Autowired
-    private ResidentFacade residentFacade;
-    @Autowired
-    private WorkerFacade workerFacade;
-
-    @Value("${admin.specialSecretKey}")
-    private String SECRET_KEY;
-
-    public User findById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+    public UserFacade(UserRepository userRepository, AdminFacade adminFacade, ResidentFacade residentFacade, WorkerFacade workerFacade) {
+        this.userRepository = userRepository;
+        this.adminFacade = adminFacade;
+        this.residentFacade = residentFacade;
+        this.workerFacade = workerFacade;
     }
 
+    public User findById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException(MESSAGE_USER_EXCEPTION));
+    }
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Usuario y/o Contraseña incorrecta"));
+    }
+
+    //Buscar por nombre de usuario
+    public boolean isUsernameExist(String username){
+        return userRepository.findByUsername(username).isPresent();
+    }
     public User save(User user) {
         return userRepository.save(user);
     }
 
     public User save(User user, UserDto request) {
-
-        String requestSecretKey = (request.getSecretKey() != null) ? request.getSecretKey() : "";
-        if(checkAuthorityContext() != "SUPERADMIN" && !requestSecretKey.equals(SECRET_KEY) ){
-            throw new BadRequestException("No tienes los privilegios para esta operacion");
+            if (!checkAuthorityContext().equals(SUPERADMIN) ) {
+            throw new BadRequestException(MESSAGE_USER_EXCEPTION);
         }
         return userRepository.save(user);
     }
 
     public Admin saveAdmin(Admin user) {
-        if(checkAuthorityContext() != "SUPERADMIN"){
-            throw new BadRequestException("No tienes los privilegios para esta operacion");
+        if (!checkAuthorityContext().equals(SUPERADMIN)) {
+            throw new BadRequestException(MESSAGE_USER_EXCEPTION);
         }
         return adminFacade.save(user);
     }
 
     public Resident saveResident(Resident user) {
-        if(checkAuthorityContext() != "ADMIN" && checkAuthorityContext() != "SUPERADMIN"){
-            throw new BadRequestException("No tienes los privilegios para esta operacion");
+        if (!checkAuthorityContext().equals(ADMIN) && !checkAuthorityContext().equals(SUPERADMIN)) {
+            throw new BadRequestException(MESSAGE_BAD_REQUEST_EXCEPTION);
         }
         return residentFacade.save(user);
     }
 
     public Worker saveWorker(Worker user) {
-        if(checkAuthorityContext() != "ADMIN" && checkAuthorityContext() != "SUPERADMIN"){
-            throw new BadRequestException("No tienes los privilegios para esta operacion");
+        if (!checkAuthorityContext().equals(ADMIN) && !checkAuthorityContext().equals(SUPERADMIN)) {
+            throw new BadRequestException(MESSAGE_BAD_REQUEST_EXCEPTION);
         }
         return workerFacade.save(user);
     }
 
-    private String checkAuthorityContext(){
+    private String checkAuthorityContext() {
         String authority = "";
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             authority = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().toList().get(0).toString();
         }
-        System.out.println("authority");
-        System.out.println(authority);
         return authority;
+    }
+
+    private List<User> getAllUsersByAuthority(User user){
+        //
+        return null;
     }
 }

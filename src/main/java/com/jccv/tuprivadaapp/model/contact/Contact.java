@@ -1,8 +1,11 @@
-package com.jccv.tuprivadaapp.model.resident;
+package com.jccv.tuprivadaapp.model.contact;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jccv.tuprivadaapp.model.User;
+import com.jccv.tuprivadaapp.model.admin.Admin;
+import com.jccv.tuprivadaapp.model.condominium.Condominium;
+import com.jccv.tuprivadaapp.model.resident.Resident;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +15,7 @@ import lombok.*;
 @ToString
 @Builder
 @Entity
-@Table(name = "contacts_resident")
+@Table(name = "contacts")
 public class Contact {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,9 +29,16 @@ public class Contact {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "resident_id")
     @JsonBackReference
     private Resident resident;
+
+
+    @ManyToOne
+    @JoinColumn(name = "condominium_id")
+    @JsonBackReference
+    private Condominium condominium;
+
 
 }
