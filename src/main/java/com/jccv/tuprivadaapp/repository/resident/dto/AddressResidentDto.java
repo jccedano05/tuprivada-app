@@ -35,8 +35,6 @@ public class AddressResidentDto {
     @DecimalMin(value = "0" ,message = "El id del residente no debe estar vacío")
     private Long residentId;
 
-    @DecimalMin(value = "0" ,message = "El id del condominio id no debe estar vacío")
-    private Long condominiumId;
 
 
 

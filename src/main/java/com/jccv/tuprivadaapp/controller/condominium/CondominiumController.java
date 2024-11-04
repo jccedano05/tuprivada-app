@@ -28,6 +28,9 @@ public class CondominiumController {
     @PostMapping
     public ResponseEntity<?> createCondominium(@RequestBody CondominiumDto condominium) {
         try {
+
+            System.out.println(" ------ Condominium Controller -------");
+            System.out.println(condominium.toString());
             Condominium createdCondominium = condominiumService.create(condominium);
             return new ResponseEntity<>(createdCondominium, HttpStatus.CREATED);
         } catch (Exception e) {

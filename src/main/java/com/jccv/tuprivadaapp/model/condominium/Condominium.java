@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jccv.tuprivadaapp.model.User;
 import com.jccv.tuprivadaapp.model.account_bank.AccountBank;
+import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.faq.Faq;
 import com.jccv.tuprivadaapp.model.finance.Finance;
 import com.jccv.tuprivadaapp.model.notice.Notice;
@@ -82,4 +83,9 @@ public class Condominium {
     @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Finance> finances;
+
+    @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<Charge> charges;  // Lista de cargos asociados al condominio
+
 }

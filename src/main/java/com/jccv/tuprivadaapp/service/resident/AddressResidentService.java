@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface AddressResidentService {
 
-    public AddressResidentDto getAddresResidentById(Long id);
+    public AddressResidentDto getAddressResidentById(Long id);
+    public AddressResidentDto getAddressResidentByResidentId(Long residentId);
 
     public List<AddressResidentDto>getAllAddressResidents();
     public List<AddressResidentDto>getAllAddressResidentsByCondominiumId(Long condominiumId);

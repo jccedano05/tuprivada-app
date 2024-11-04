@@ -62,4 +62,14 @@ public class ResidentServiceImp implements ResidentService {
     public void deleteResident(Long id) {
 
     }
+
+    @Override
+    public List<Resident> getAllResidentsWithCondominiumId(Long condominiumId) {
+        return residentRepository.findAllByCondominiumId(condominiumId);
+    }
+
+    @Override
+    public List<Resident> getResidentsByIds(List<Long> residentIds) {
+        return residentRepository.findAllById(residentIds);
+    }
 }

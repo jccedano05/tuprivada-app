@@ -14,8 +14,13 @@ public class AddressResidentServiceImp implements AddressResidentService {
     @Autowired
     private AddressResidentFacade addresResidentFacade;
     @Override
-    public AddressResidentDto getAddresResidentById(Long id) {
-        return addresResidentFacade.getAddresResidentById(id);
+    public AddressResidentDto getAddressResidentById(Long id) {
+        return addresResidentFacade.getAddressResidentById(id);
+    }
+
+    @Override
+    public AddressResidentDto getAddressResidentByResidentId(Long residentId) {
+        return addresResidentFacade.getAddressResidentByResidentId(residentId);
     }
 
     @Override

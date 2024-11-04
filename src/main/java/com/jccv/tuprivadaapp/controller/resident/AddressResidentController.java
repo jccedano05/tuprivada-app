@@ -26,7 +26,7 @@ public class AddressResidentController {
     @GetMapping("{id}")
     public ResponseEntity<?> getAddressResidentById(@PathVariable Long id) {
         try {
-            return new ResponseEntity<>(addressResidentService.getAddresResidentById(id), HttpStatus.OK);
+            return new ResponseEntity<>(addressResidentService.getAddressResidentById(id), HttpStatus.OK);
         }catch (ResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -55,6 +55,18 @@ public class AddressResidentController {
         try {
             return new ResponseEntity<>(addressResidentService.createAddressResident(addressResident), HttpStatus.CREATED);
         } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("residents/{id}")
+    public ResponseEntity<?> getAddressResidentByResidentId(@PathVariable Long id) {
+        try {
+            return new ResponseEntity<>(addressResidentService.getAddressResidentByResidentId(id), HttpStatus.OK);
+        }catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

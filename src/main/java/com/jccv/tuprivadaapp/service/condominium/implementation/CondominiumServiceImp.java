@@ -1,7 +1,8 @@
 package com.jccv.tuprivadaapp.service.condominium.implementation;
 
-import com.jccv.tuprivadaapp.dto.acoountBank.AccountBankDto;
+
 import com.jccv.tuprivadaapp.dto.condominium.CondominiumDto;
+import com.jccv.tuprivadaapp.dto.condominium.mapper.CondominiumMapper;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.condominium.Address;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
@@ -17,26 +18,29 @@ import java.util.List;
 @Service
 public class CondominiumServiceImp implements CondominiumService {
 
-    private CondominiumRepository condominiumRepository;
+    private final CondominiumRepository condominiumRepository;
 
     private final AddressService addressService;
 
-    private final AccountBankService accountBankService;
+    private final CondominiumMapper condominiumMapper;
+
 
     @Autowired
-    public CondominiumServiceImp(CondominiumRepository condominiumRepository, AddressService addressService, AccountBankService accountBankService) {
+    public CondominiumServiceImp(CondominiumRepository condominiumRepository, AddressService addressService, AccountBankService accountBankService, CondominiumDto condominiumDto, CondominiumMapper condominiumMapper) {
         this.condominiumRepository = condominiumRepository;
         this.addressService = addressService;
-        this.accountBankService = accountBankService;
+        this.condominiumMapper = condominiumMapper;
     }
 
 
     public Condominium create(CondominiumDto condominiumDto) {
-        Condominium condominium = CondominiumDto.convertToCondominium(condominiumDto);
+        Condominium condominium = condominiumMapper.convertToCondominium(condominiumDto);
         if (condominiumDto.getAddressId() != null){
             Address address = addressService.findById(condominiumDto.getAddressId());
             condominium.setAddress(address);
         }
+        System.out.println("Condominium Service 2");
+        System.out.println(condominiumDto.toString());
         return condominiumRepository.save(condominium);
     }
 
@@ -51,7 +55,7 @@ public class CondominiumServiceImp implements CondominiumService {
 
     public Condominium update(CondominiumDto condominiumDto) {
 
-        Condominium condominium = CondominiumDto.convertToCondominium(condominiumDto);
+        Condominium condominium = condominiumMapper.convertToCondominium(condominiumDto);
         if (condominiumDto.getAddressId() != null){
             Address address = addressService.findById(condominiumDto.getAddressId());
             condominium.setAddress(address);

@@ -5,6 +5,7 @@ import com.jccv.tuprivadaapp.dto.auth.UserUpdateByAdminDto;
 import com.jccv.tuprivadaapp.dto.auth.UserUpdateBySuperadminDto;
 import com.jccv.tuprivadaapp.dto.auth.UserUpdateDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
+import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.Role;
 import com.jccv.tuprivadaapp.model.Token;
 import com.jccv.tuprivadaapp.model.User;
@@ -31,6 +32,8 @@ public class AuthenticationController {
             return ResponseEntity.ok(authenticationService.register(request));
         } catch (BadRequestException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
         catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

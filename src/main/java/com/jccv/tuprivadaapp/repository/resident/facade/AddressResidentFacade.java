@@ -19,7 +19,7 @@ public class AddressResidentFacade {
     @Autowired
     private AddressResidentMapper addressResidentMapper;
 
-    public AddressResidentDto getAddresResidentById(Long id) {
+    public AddressResidentDto getAddressResidentById(Long id) {
         AddressResident address = residentRepository.findById(id).orElseThrow(() -> new BadRequestException("No se pudo encontrar el domicilio con el id: " + id));
         return addressResidentMapper.convertModelToDto(address);
     }
@@ -37,6 +37,16 @@ public class AddressResidentFacade {
     public AddressResidentDto createAddressResident(AddressResidentDto addressResidentDto) {
         AddressResident address = addressResidentMapper.convertDtoToModel(addressResidentDto);
          address = residentRepository.save(address);
+        return addressResidentMapper.convertModelToDto(address);
+    }
+
+    public AddressResidentDto getAddressResidentByResidentId(Long residentId) {
+        AddressResident address = residentRepository.findByResidentId(residentId);
+
+        if (address == null) {
+            throw new BadRequestException("No se encontró el domicilio para el residente con el id: " + residentId);
+        }
+
         return addressResidentMapper.convertModelToDto(address);
     }
 }

@@ -11,12 +11,10 @@ import org.springframework.stereotype.Component;
 public class AddressResidentMapper {
 
     private final ResidentFacade residentFacade;
-    private final CondominiumService condominiumService;
 
     @Autowired
     public AddressResidentMapper(ResidentFacade residentFacade, CondominiumService condominiumService) {
         this.residentFacade = residentFacade;
-        this.condominiumService = condominiumService;
     }
 
     public AddressResidentDto convertModelToDto(AddressResident address){
@@ -27,7 +25,6 @@ public class AddressResidentMapper {
                 .intNumber(address.getIntNumber())
                 .intercom(address.getIntercom())
                 .residentId(address.getResident().getId())
-                .condominiumId(address.getCondominium().getId())
                 .build();
     }
 
@@ -40,7 +37,6 @@ public class AddressResidentMapper {
                 .intNumber(dto.getIntNumber())
                 .intercom(dto.getIntercom())
                 .resident(residentFacade.findResidentById(dto.getResidentId()))
-                .condominium(condominiumService.findById(dto.getCondominiumId()))
                 .build();
 
     }

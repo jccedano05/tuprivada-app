@@ -16,4 +16,9 @@ public interface ResidentService {
     public Resident saveResident(Resident resident);
     public Resident updateResident(Long id ,Resident resident);
     public void deleteResident(Long id);
+
+    List<Resident> getAllResidentsWithCondominiumId(Long condominiumId);
+
+
+    List<Resident> getResidentsByIds(List<Long> residentIds);
 }

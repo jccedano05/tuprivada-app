@@ -12,11 +12,11 @@ public class PaymentMapper {
     public PaymentDto toDTO(Payment payment) {
         return PaymentDto.builder()
                 .id(payment.getId())
-                .amount(payment.getAmount())
-                .chargeDate(payment.getChargeDate())
-                .dueDate(payment.getDueDate())
-                .typePayment(payment.getTypePayment())
-                .description(payment.getDescription())
+//                .amount(payment.getAmount())
+//                .chargeDate(payment.getChargeDate())
+//                .dueDate(payment.getDueDate())
+//                .typePayment(payment.getTypePayment())
+//                .description(payment.getDescription())
                 .isPaid(payment.isPaid())
                 .residentId(payment.getResident().getId()) // Asumiendo que quieres el ID del residente
                 .build();
@@ -26,11 +26,11 @@ public class PaymentMapper {
     public Payment toEntity(PaymentDto paymentDTO, Resident resident) {
         return Payment.builder()
                 .id(paymentDTO.getId())
-                .amount(paymentDTO.getAmount())
-                .chargeDate(paymentDTO.getChargeDate())
-                .dueDate(paymentDTO.getDueDate())
-                .typePayment(paymentDTO.getTypePayment())
-                .description(paymentDTO.getDescription())
+//                .amount(paymentDTO.getAmount())
+//                .chargeDate(paymentDTO.getChargeDate())
+//                .dueDate(paymentDTO.getDueDate())
+//                .typePayment(paymentDTO.getTypePayment())
+//                .description(paymentDTO.getDescription())
                 .isPaid(paymentDTO.isPaid())
                 .resident(resident) // Necesitas pasar el residente
                 .build();

@@ -29,6 +29,20 @@ public class ResidentController {
         return ResponseEntity.ok(residentSaved);
     }
 
+    @GetMapping("condominiums/{condominiumId}")
+    public ResponseEntity<?> getAllResidentsWithCondominiumId(@PathVariable Long condominiumId) {
+        try{
+            return new ResponseEntity<>(residentService.getAllResidentsWithCondominiumId(condominiumId), HttpStatus.OK);
+        }catch (
+                ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getResidentByUserId(@PathVariable Long userId) {
         try{

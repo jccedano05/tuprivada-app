@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface AddressResidentRepository extends JpaRepository<AddressResident, Long> {
 
 
-    @Query("SELECT ar FROM AddressResident ar WHERE ar.condominium.id = :condominiumId")
+    @Query("SELECT ar FROM AddressResident ar JOIN ar.resident r WHERE r.condominium.id = :condominiumId")
     Optional<List<AddressResident>> findAllAddressResidentByCondominiumId(@Param("condominiumId") Long condominiumId);
+
+    AddressResident findByResidentId(Long residentId);
 }

@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.controller.payment;
 
 
+import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentSummaryDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
@@ -73,12 +74,12 @@ public class PaymentController {
     }
     @PreAuthorize(USER_LEVEL)
     @GetMapping("/resident/{residentId}/unpaid")
-    public ResponseEntity<Page<Payment>> getUnpaidPayments(
+    public ResponseEntity<Page<PaymentDetailsDto>> getUnpaidPayments(
             @PathVariable Long residentId,
             @RequestParam(defaultValue = "0") int page,   // Página por defecto es 0
             @RequestParam(defaultValue = "10") int size) {  // Tamaño por defecto es 10
         // Llamada al servicio con paginación
-        Page<Payment> unpaidPayments = paymentService.getUnpaidPaymentsForResident(residentId, page, size);
+        Page<PaymentDetailsDto> unpaidPayments = paymentService.getUnpaidPaymentsForResident(residentId, page, size);
 
         // Retornar la respuesta con el objeto Page
         return ResponseEntity.ok(unpaidPayments);
@@ -86,23 +87,23 @@ public class PaymentController {
 
     @PreAuthorize(USER_LEVEL)
     @GetMapping("/resident/{residentId}/paid")
-    public ResponseEntity<Page<Payment>> getPaidPayments(
+    public ResponseEntity<Page<PaymentDetailsDto>> getPaidPayments(
             @PathVariable Long residentId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Payment> paidPayments = paymentService.getPaidPaymentsForResident(residentId, page, size);
+        Page<PaymentDetailsDto> paidPayments = paymentService.getPaidPaymentsForResident(residentId, page, size);
         return ResponseEntity.ok(paidPayments);
     }
 
     @PreAuthorize(USER_LEVEL)
     @GetMapping("/resident/{residentId}/payments")
-    public ResponseEntity<Page<Payment>> getPaymentsInRange(
+    public ResponseEntity<Page<PaymentDetailsDto>> getPaymentsInRange(
             @PathVariable Long residentId,
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Payment> paymentsInRange = paymentService.getPaymentsInRangeForResident(residentId, startDate, endDate, page, size);
+        Page<PaymentDetailsDto> paymentsInRange = paymentService.getPaymentsInRangeForResident(residentId, startDate, endDate, page, size);
         return ResponseEntity.ok(paymentsInRange);
     }
 

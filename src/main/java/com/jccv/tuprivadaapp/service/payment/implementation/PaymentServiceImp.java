@@ -1,14 +1,17 @@
 package com.jccv.tuprivadaapp.service.payment.implementation;
 
+import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentSummaryDto;
 import com.jccv.tuprivadaapp.dto.payment.mapper.PaymentMapper;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
+import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.payment.PenaltyTypeEnum;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
 import com.jccv.tuprivadaapp.service.accountBank.AccountBankService;
+import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 import org.slf4j.Logger;
@@ -23,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentServiceImp implements PaymentService {
@@ -35,12 +40,15 @@ public class PaymentServiceImp implements PaymentService {
 
     private final AccountBankService accountBankService;
 
+    private final ChargeService chargeService;
+
     @Autowired
-    public PaymentServiceImp(PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, AccountBankService accountBankService) {
+    public PaymentServiceImp(PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, AccountBankService accountBankService, ChargeService chargeService) {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
         this.residentService = residentService;
         this.accountBankService = accountBankService;
+        this.chargeService = chargeService;
     }
 
     @Override
@@ -63,7 +71,7 @@ public class PaymentServiceImp implements PaymentService {
 
     @Override
     public List<PaymentDto> findAll() {
-        return paymentRepository.findAll().stream().map(payment -> paymentMapper.toDTO(payment)).toList();
+        return paymentRepository.findAll().stream().map(paymentMapper::toDTO).toList();
     }
 
     @Override
@@ -105,23 +113,20 @@ public class PaymentServiceImp implements PaymentService {
 //        return paymentRepository.findByResidentAndIsPaidFalseAndIsDeletedFalse(resident);
 //    }
 
-    public Page<Payment> getUnpaidPaymentsForResident(Long residentId, int page, int size) {
-        // Crear un Pageable para la paginación
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("chargeDate")));
-
-        // Llamar al repositorio para obtener los pagos no pagados y no eliminados, ordenados por fecha de carga
+    public Page<PaymentDetailsDto> getUnpaidPaymentsForResident(Long residentId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         return paymentRepository.findByResidentIdAndIsPaidFalseAndIsDeletedFalse(residentId, pageable);
     }
 
-    public Page<Payment> getPaidPaymentsForResident(Long residentId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("chargeDate")));
-        return paymentRepository.findByResidentIdAndIsPaidTrueAndIsDeletedFalseOrderByChargeDateDesc(residentId, pageable);
+    public Page<PaymentDetailsDto> getPaidPaymentsForResident(Long residentId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return paymentRepository.findByResidentIdAndIsPaidTrueAndIsDeletedFalse(residentId, pageable);
     }
 
-
-    public Page<Payment> getPaymentsInRangeForResident(Long residentId, LocalDateTime startDate, LocalDateTime endDate, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("chargeDate")));
-        return paymentRepository.findByResidentIdAndChargeDateBetweenAndIsDeletedFalseOrderByChargeDateDesc(residentId, startDate, endDate, pageable);
+    public Page<PaymentDetailsDto> getPaymentsInRangeForResident(Long residentId, LocalDateTime startDate, LocalDateTime endDate, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return paymentRepository.findByResidentIdAndChargeDateBetweenAndIsDeletedFalse(
+                residentId, startDate, endDate, pageable);
     }
 
     // Método para obtener el total de deuda de un residente
@@ -156,51 +161,95 @@ public class PaymentServiceImp implements PaymentService {
                 .build();
     }
 
+//    @Transactional
+//    public List<Payment> applyChargeToResidents(List<Resident> residents, ChargeDto chargeDto) {
+//        List<Payment> payments = new ArrayList<>();
+//        for (Resident resident : residents) {
+//            Payment payment = Payment.builder()
+//                    .resident(resident)
+//                    .amount(chargeDto.getAmount())
+//                    .chargeDate(chargeDto.getChargeDate())
+//                    .dueDate(chargeDto.getDueDate())  // Por ejemplo, un mes de vencimiento
+//                    .description(chargeDto.getDescription())
+//                    .isPaid(false)
+//                    .isDeleted(false)
+//                    .typePayment(chargeDto.getTypePayment())
+//                    .penaltyType(chargeDto.getPenaltyType())
+//                    .penaltyValue(chargeDto.getPenaltyValue())
+//                    .build();
+//
+//            payments.add(paymentRepository.save(payment));
+//        }
+//
+//        return payments;
+//    }
 
-
-    @Scheduled(cron = "0 0 4 * * *", zone = "America/Mexico_City")
     @Transactional
-    public void processOverduePayments() {
-        Logger logger = LoggerFactory.getLogger(getClass());
-        logger.info("Starting processOverduePayments...");
+    public List<Payment> applyChargeToResidents(List<Resident> residents, Charge charge) {
+        // Genera los pagos para cada residente
+        List<Payment> payments = residents.stream().map(resident -> {
+            Payment payment = Payment.builder()
+//                    .amount(chargeDto.getAmount())
+//                    .chargeDate(LocalDateTime.now())
+//                    .dueDate(chargeDto.getDueDate())
+//                    .typePayment(chargeDto.getTitleTypePayment())
+//                    .description(chargeDto.getDescription())
+                    .charge(charge)
+                    .resident(resident)
+                    .isPaid(false)
+                    .build();
 
-        try {
-            // Buscar todos los pagos vencidos que no se han pagado y aún no tienen recargo aplicado
-            List<Payment> overduePayments = paymentRepository.findOverduePayments();
+            return paymentRepository.save(payment);
+        }).collect(Collectors.toList());
 
-            for (Payment overduePayment : overduePayments) {
-                try {
-                    logger.info("Processing overdue payment ID: {} for resident ID: {}",
-                            overduePayment.getId(), overduePayment.getResident().getId());
 
-                    // Lógica para aplicar el recargo según el tipo (fijo o porcentaje)
-                    double penalty = 0;
-                    if (overduePayment.getPenaltyType() == PenaltyTypeEnum.PERCENTAGE) {
-                        penalty = overduePayment.getAmount() * (overduePayment.getPenaltyValue() / 100);
-                    } else if (overduePayment.getPenaltyType() == PenaltyTypeEnum.FIXED_AMOUNT) {
-                        penalty = overduePayment.getPenaltyValue();
-                    }
-
-                    // Actualizar el monto del pago sumando el recargo
-                    overduePayment.setAmount(overduePayment.getAmount() + penalty);
-
-                    // Actualizar la descripción para indicar que el pago está vencido
-                    overduePayment.setDescription(overduePayment.getDescription() + " (Vencido)");
-
-                    // Marcar el recargo como aplicado
-                    overduePayment.setPenaltyApplied(true);
-
-                    // Guardar los cambios en la base de datos
-                    paymentRepository.save(overduePayment);
-
-                } catch (Exception e) {
-                    logger.error("Error processing overdue payment ID {}: {}", overduePayment.getId(), e.getMessage(), e);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error during processOverduePayments: {}", e.getMessage(), e);
-        }
-
-        logger.info("Finished processOverduePayments.");
+        return payments;
     }
+
+//
+//    @Scheduled(cron = "0 0 4 * * *", zone = "America/Mexico_City")
+//    @Transactional
+//    public void processOverduePayments() {
+//        Logger logger = LoggerFactory.getLogger(getClass());
+//        logger.info("Starting processOverduePayments...");
+//
+//        try {
+//            // Buscar todos los pagos vencidos que no se han pagado y aún no tienen recargo aplicado
+//            List<Payment> overduePayments = paymentRepository.findOverduePayments();
+//
+//            for (Payment overduePayment : overduePayments) {
+//                try {
+//                    logger.info("Processing overdue payment ID: {} for resident ID: {}",
+//                            overduePayment.getId(), overduePayment.getResident().getId());
+//
+//                    // Lógica para aplicar el recargo según el tipo (fijo o porcentaje)
+//                    double penalty = 0;
+//                    if (overduePayment.getPenaltyType() == PenaltyTypeEnum.PERCENTAGE) {
+//                        penalty = overduePayment.getAmount() * (overduePayment.getPenaltyValue() / 100);
+//                    } else if (overduePayment.getPenaltyType() == PenaltyTypeEnum.FIXED_AMOUNT) {
+//                        penalty = overduePayment.getPenaltyValue();
+//                    }
+//
+//                    // Actualizar el monto del pago sumando el recargo
+//                    overduePayment.setAmount(overduePayment.getAmount() + penalty);
+//
+//                    // Actualizar la descripción para indicar que el pago está vencido
+//                    overduePayment.setDescription(overduePayment.getDescription() + " (Vencido)");
+//
+//                    // Marcar el recargo como aplicado
+//                    overduePayment.setPenaltyApplied(true);
+//
+//                    // Guardar los cambios en la base de datos
+//                    paymentRepository.save(overduePayment);
+//
+//                } catch (Exception e) {
+//                    logger.error("Error processing overdue payment ID {}: {}", overduePayment.getId(), e.getMessage(), e);
+//                }
+//            }
+//        } catch (Exception e) {
+//            logger.error("Error during processOverduePayments: {}", e.getMessage(), e);
+//        }
+//
+//        logger.info("Finished processOverduePayments.");
+//    }
 }

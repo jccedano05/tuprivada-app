@@ -138,11 +138,11 @@ public class RecurringPaymentServiceImp  implements RecurringPaymentService {
 
                         if(paymentResident.isActiveResident()){
                             Payment payment = Payment.builder()
-                                    .amount(recurringPayment.getAmount())
-                                    .typePayment(recurringPayment.getTitle())
-                                    .description(recurringPayment.getDescription())
-                                    .chargeDate(LocalDateTime.now())
-                                    .dueDate(LocalDateTime.now().plusDays(recurringPayment.getDaysToDueDate()))
+//                                    .amount(recurringPayment.getAmount())
+//                                    .typePayment(recurringPayment.getTitle())
+//                                    .description(recurringPayment.getDescription())
+//                                    .chargeDate(LocalDateTime.now())
+//                                    .dueDate(LocalDateTime.now().plusDays(recurringPayment.getDaysToDueDate()))
                                     .resident(paymentResident)
                                     .isPaid(false)
                                     .build();

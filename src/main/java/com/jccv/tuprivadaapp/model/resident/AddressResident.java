@@ -38,10 +38,4 @@ public class AddressResident {
     @JsonBackReference  // Evita recursión infinita al serializar
     private Resident resident;
 
-
-    @OneToOne
-    @JoinColumn(name = "condominium_id", nullable = false)
-    @NotNull(message = "El condominio no debe estar vacío")
-    @JsonBackReference  // Este lado no se serializa
-    private Condominium condominium;
 }

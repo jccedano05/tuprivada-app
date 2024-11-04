@@ -19,4 +19,7 @@ public interface ResidentRepository extends JpaRepository<Resident, Long> {
         where c.resident.id = :id
         """)
     Optional<List<Contact>> findAllContactsByResidentId(Long id);
+
+    List<Resident> findAllByCondominiumId(Long condominiumId);
+
 }
