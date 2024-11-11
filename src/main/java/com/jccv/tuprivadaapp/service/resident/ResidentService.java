@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.service.resident;
 
 import com.jccv.tuprivadaapp.dto.resident.ResidentDto;
+import com.jccv.tuprivadaapp.dto.resident.ResidentRelevantInfoDto;
 import com.jccv.tuprivadaapp.model.contact.Contact;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 
@@ -17,7 +18,7 @@ public interface ResidentService {
     public Resident updateResident(Long id ,Resident resident);
     public void deleteResident(Long id);
 
-    List<Resident> getAllResidentsWithCondominiumId(Long condominiumId);
+    List<ResidentRelevantInfoDto> getAllResidentsWithCondominiumId(Long condominiumId);
 
 
     List<Resident> getResidentsByIds(List<Long> residentIds);

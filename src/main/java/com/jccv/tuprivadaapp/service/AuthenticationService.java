@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.service;
 
 import com.jccv.tuprivadaapp.dto.auth.*;
+import com.jccv.tuprivadaapp.dto.auth.mapper.UserMapper;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.Role;
@@ -47,8 +48,10 @@ public class AuthenticationService {
     private final ResidentService residentService;
     private final AdminService adminService;
 
+    private final UserMapper userMapper;
+
     @Autowired
-    public AuthenticationService(PasswordEncoder passwordEncoder, JwtService jwtService, UserDto userDto, UserFacade userFacade, CondominiumService condominiumService, TokenRepository tokenRepository, AuthenticationManager authenticationManager, AuthorizationService authorizationService, ResidentService residentService, AdminService adminService) {
+    public AuthenticationService(PasswordEncoder passwordEncoder, JwtService jwtService, UserDto userDto, UserFacade userFacade, CondominiumService condominiumService, TokenRepository tokenRepository, AuthenticationManager authenticationManager, AuthorizationService authorizationService, ResidentService residentService, AdminService adminService, UserMapper userMapper) {
 
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -60,6 +63,7 @@ public class AuthenticationService {
         this.authorizationService = authorizationService;
         this.residentService = residentService;
         this.adminService = adminService;
+        this.userMapper = userMapper;
     }
 
     public AuthenticatedUserDto register(UserDto request) {
@@ -192,7 +196,7 @@ public class AuthenticationService {
 
         User user = userFacade.findByUsername(request.getUsername());
         String token = jwtService.generateToken(user);
-        revokeAllTokensByUser(user);
+//        revokeAllTokensByUser(user);
         saveToken(user, token);
         return authenticatedUserResponse(user, token);
 //        return new AuthenticationResponse(token);
@@ -223,7 +227,7 @@ public class AuthenticationService {
         if(request.getLastName() != null){
             user.setLastName(request.getLastName());
         }
-        return userDto.convertUserToUserDto(userFacade.save(user));
+        return userMapper.convertUserToUserDto(userFacade.save(user));
     }
 
 
@@ -249,7 +253,7 @@ public class AuthenticationService {
             user.setRole(request.getRole());
         }
 
-        return userDto.convertUserToUserDto(userFacade.save(user));
+        return userMapper.convertUserToUserDto(userFacade.save(user));
     }
 
     @Transactional
@@ -272,7 +276,7 @@ public class AuthenticationService {
         if(request.getRole() != null){
             user.setRole(request.getRole());
         }
-        return userDto.convertUserToUserDto(userFacade.save(user));
+        return userMapper.convertUserToUserDto(userFacade.save(user));
     }
 
 
@@ -310,13 +314,13 @@ public class AuthenticationService {
 
     }
 
-    private void revokeAllTokensByUser(User user) {
-        List<Token> validTokenListByUser = tokenRepository.findAllTokensByUser(user.getId());
-        if (!validTokenListByUser.isEmpty()) {
-            validTokenListByUser.forEach(t -> t.setLoggedOut(true));
-        }
-        tokenRepository.saveAll(validTokenListByUser);
-    }
+//    private void revokeAllTokensByUser(User user) {
+//        List<Token> validTokenListByUser = tokenRepository.findAllTokensByUser(user.getId());
+//        if (!validTokenListByUser.isEmpty()) {
+//            validTokenListByUser.forEach(t -> t.setLoggedOut(true));
+//        }
+//        tokenRepository.saveAll(validTokenListByUser);
+//    }
 
     private void saveToken(User user, String token) {
         Token tokenToSave = Token.builder()

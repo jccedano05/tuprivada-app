@@ -57,7 +57,7 @@ public class ChargeServiceImp implements ChargeService {
 
     @Override
     public List<ChargeSummaryDto> getChargesByCondominiumId(Long condominiumId) {
-        List<Charge> charges = chargeRepository.findByCondominiumId(condominiumId);
+        List<Charge> charges = chargeRepository.findByCondominiumIdOrderByChargeDateDesc(condominiumId);
         List<ChargeSummaryDto> chargeSummaryDtos = new ArrayList<>();
 
         for (Charge charge : charges) {
@@ -87,12 +87,13 @@ public class ChargeServiceImp implements ChargeService {
         summaryDto.setTotalPayments(totalPayments);
         summaryDto.setPaymentsCompleted(paymentsCompleted);
         summaryDto.setActive(charge.isActive());
+        summaryDto.setResidentIds(charge.getPayments().stream().map(payment -> payment.getResident().getId()).toList()); //Obtain list of residents
         return summaryDto;
     }
 
     @Override
     public List<ChargeSummaryDto> getChargesByCondominiumIdAndDateRange(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate) {
-        List<Charge> charges = chargeRepository.findByCondominiumIdAndChargeDateBetween(condominiumId, startDate, endDate);
+        List<Charge> charges = chargeRepository.findByCondominiumIdAndChargeDateBetweenOrderByChargeDateDesc(condominiumId, startDate, endDate);
         List<ChargeSummaryDto> chargeSummaryDtos = new ArrayList<>();
 
         for (Charge charge : charges) {
@@ -102,6 +103,7 @@ public class ChargeServiceImp implements ChargeService {
                     .count();
 
             ChargeSummaryDto summaryDto = getChargeSummaryDto(charge, totalPayments, paymentsCompleted);
+
 
             chargeSummaryDtos.add(summaryDto);
         }

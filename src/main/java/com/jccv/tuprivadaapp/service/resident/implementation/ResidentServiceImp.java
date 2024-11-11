@@ -2,6 +2,7 @@ package com.jccv.tuprivadaapp.service.resident.implementation;
 
 import com.jccv.tuprivadaapp.dto.resident.ResidentDto;
 import com.jccv.tuprivadaapp.dto.resident.ResidentMapper;
+import com.jccv.tuprivadaapp.dto.resident.ResidentRelevantInfoDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.contact.Contact;
 import com.jccv.tuprivadaapp.model.resident.Resident;
@@ -64,8 +65,8 @@ public class ResidentServiceImp implements ResidentService {
     }
 
     @Override
-    public List<Resident> getAllResidentsWithCondominiumId(Long condominiumId) {
-        return residentRepository.findAllByCondominiumId(condominiumId);
+    public List<ResidentRelevantInfoDto> getAllResidentsWithCondominiumId(Long condominiumId) {
+        return residentRepository.findAllByCondominiumIdAndIsActiveResidentTrueOrderByStreetAndExtNumberIgnoreCase(condominiumId).stream().map(residentMapper::modelToResidentInfoDto).toList();
     }
 
     @Override

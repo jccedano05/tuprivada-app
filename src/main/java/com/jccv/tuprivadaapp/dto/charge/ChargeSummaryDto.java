@@ -4,6 +4,7 @@ import com.jccv.tuprivadaapp.model.payment.PenaltyTypeEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ChargeSummaryDto {
@@ -18,4 +19,5 @@ public class ChargeSummaryDto {
     private int totalPayments;                    // Total de pagos
     private int paymentsCompleted;                // Pagos completados
     private boolean active;                       // Estado del cargo
+    private List<Long> residentIds;
 }

@@ -14,7 +14,7 @@ public class ResidentFacade {
     private ResidentRepository residentRepository;
 
     public Resident findResidentById(Long residentId){
-        return residentRepository.findById(residentId).orElseThrow(() -> new ResourceNotFoundException("referencia de pago no encontrado"));
+        return residentRepository.findById(residentId).orElseThrow(() -> new ResourceNotFoundException("residente no encontrado"));
     }
 
     public Resident save(Resident resident) {

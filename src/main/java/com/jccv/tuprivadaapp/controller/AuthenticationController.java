@@ -114,7 +114,6 @@ public class AuthenticationController {
     @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody User request) {
         try {
-            System.out.println("Request");
             return ResponseEntity.ok(authenticationService.authenticate(request));
 
         } catch (Exception e) {

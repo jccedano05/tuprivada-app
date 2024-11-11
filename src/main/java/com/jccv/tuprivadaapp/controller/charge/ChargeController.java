@@ -50,26 +50,27 @@ public class ChargeController {
         }
     }
 
-    @PostMapping("/apply/all")
-    public ResponseEntity<?> applyChargeToAllResidents(@RequestBody ChargeDto chargeRequestDto) {
-
-        try {
-        List<Resident> allResidents = residentService.getAllResidentsWithCondominiumId(chargeRequestDto.getCondominiumId());
-        Charge charge = chargeService.createCharge(chargeRequestDto);
-        List<Payment> payments = paymentService.applyChargeToResidents(allResidents, charge);
-
-        return new ResponseEntity<>(payments, HttpStatus.OK);
-    }catch (
-                ResourceNotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }catch (
-                BadRequestException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-        catch (Exception e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    }
+//    EL getAllResidentsWithCondominiumId fue modificado para traerlo como Dto
+//    @PostMapping("/apply/all")
+//    public ResponseEntity<?> applyChargeToAllResidents(@RequestBody ChargeDto chargeRequestDto) {
+//
+//        try {
+//        List<Resident> allResidents = residentService.getAllResidentsWithCondominiumId(chargeRequestDto.getCondominiumId());
+//        Charge charge = chargeService.createCharge(chargeRequestDto);
+//        List<Payment> payments = paymentService.applyChargeToResidents(allResidents, charge);
+//
+//        return new ResponseEntity<>(payments, HttpStatus.OK);
+//    }catch (
+//                ResourceNotFoundException e) {
+//            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+//        }catch (
+//                BadRequestException e) {
+//            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+//        }
+//        catch (Exception e) {
+//        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
+//    }
 
     @GetMapping("/condominium/{condominiumId}")
     public ResponseEntity<List<ChargeSummaryDto>> getChargesByCondominiumId(

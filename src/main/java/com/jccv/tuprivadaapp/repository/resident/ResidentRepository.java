@@ -20,6 +20,9 @@ public interface ResidentRepository extends JpaRepository<Resident, Long> {
         """)
     Optional<List<Contact>> findAllContactsByResidentId(Long id);
 
-    List<Resident> findAllByCondominiumId(Long condominiumId);
+    // Ordenar por calle y luego por número exterior
+    @Query("SELECT r FROM Resident r WHERE r.condominium.id = :condominiumId AND r.isActiveResident = true " +
+            "ORDER BY LOWER(r.addressResident.street), r.addressResident.extNumber")
+    List<Resident> findAllByCondominiumIdAndIsActiveResidentTrueOrderByStreetAndExtNumberIgnoreCase(Long condominiumId);
 
 }
