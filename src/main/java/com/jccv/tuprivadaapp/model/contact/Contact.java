@@ -32,12 +32,14 @@ public class Contact {
     @ManyToOne
     @JoinColumn(name = "resident_id")
     @JsonBackReference
+    @ToString.Exclude
     private Resident resident;
 
 
     @ManyToOne
     @JoinColumn(name = "condominium_id")
     @JsonBackReference
+    @ToString.Exclude
     private Condominium condominium;
 
 

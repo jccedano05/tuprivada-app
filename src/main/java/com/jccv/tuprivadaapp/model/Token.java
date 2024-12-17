@@ -27,6 +27,7 @@ public class Token {
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference
+    @ToString.Exclude
     private User user;
 
 }

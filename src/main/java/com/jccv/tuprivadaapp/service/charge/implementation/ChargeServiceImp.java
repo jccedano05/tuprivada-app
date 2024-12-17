@@ -2,14 +2,18 @@ package com.jccv.tuprivadaapp.service.charge.implementation;
 
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
+import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
+import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.charge.ChargeRepository;
 import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
+import com.jccv.tuprivadaapp.service.resident.ResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +27,16 @@ public class ChargeServiceImp implements ChargeService {
 
     private final ChargeRepository chargeRepository;
     private final CondominiumService condominiumService;
+    private final PaymentService paymentService;
+    private final ResidentService residentService;
 
     @Autowired
-    public ChargeServiceImp(ChargeRepository chargeRepository, CondominiumService condominiumService) {
+    public ChargeServiceImp(ChargeRepository chargeRepository, CondominiumService condominiumService, @Lazy PaymentService paymentService, ResidentService residentService) {
         this.chargeRepository = chargeRepository;
         this.condominiumService = condominiumService;
+
+        this.paymentService = paymentService;
+        this.residentService = residentService;
     }
 
 //    public Charge createCharge(ChargeDto chargeDto, List<Payment> payments) {
@@ -57,7 +66,7 @@ public class ChargeServiceImp implements ChargeService {
 
     @Override
     public List<ChargeSummaryDto> getChargesByCondominiumId(Long condominiumId) {
-        List<Charge> charges = chargeRepository.findByCondominiumIdOrderByChargeDateDesc(condominiumId);
+        List<Charge> charges = chargeRepository.findByCondominiumIdAndIsActiveTrueOrderByChargeDateDesc(condominiumId);
         List<ChargeSummaryDto> chargeSummaryDtos = new ArrayList<>();
 
         for (Charge charge : charges) {
@@ -93,7 +102,7 @@ public class ChargeServiceImp implements ChargeService {
 
     @Override
     public List<ChargeSummaryDto> getChargesByCondominiumIdAndDateRange(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate) {
-        List<Charge> charges = chargeRepository.findByCondominiumIdAndChargeDateBetweenOrderByChargeDateDesc(condominiumId, startDate, endDate);
+        List<Charge> charges = chargeRepository.findByCondominiumIdAndChargeDateBetweenAndIsActiveTrueOrderByChargeDateDesc(condominiumId, startDate, endDate);
         List<ChargeSummaryDto> chargeSummaryDtos = new ArrayList<>();
 
         for (Charge charge : charges) {
@@ -131,10 +140,46 @@ public Charge createCharge(ChargeDto chargeDto) {
             .condominium(condominiumService.findById(chargeDto.getCondominiumId()))
             .build();
 
-    Charge savedCharge = chargeRepository.save(charge);
+    return chargeRepository.save(charge);
 
 
-    return savedCharge;
-}
 
 }
+
+    @Override
+    @Transactional
+    public Charge updateCharge(Long chargeId, ChargeDto chargeDto) {
+        // Buscar el cargo por ID
+        Charge existingCharge = chargeRepository.findById(chargeId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el Cargo con id: " + chargeId));
+
+        // Actualizar los campos del cargo
+        existingCharge.setTitleTypePayment(chargeDto.getTitleTypePayment());
+        existingCharge.setAmount(chargeDto.getAmount());
+        existingCharge.setDescription(chargeDto.getDescription());
+        existingCharge.setPenaltyType(chargeDto.getPenaltyType());
+        existingCharge.setPenaltyValue(chargeDto.getPenaltyValue());
+        existingCharge.setChargeDate(chargeDto.getChargeDate());
+        existingCharge.setDueDate(chargeDto.getDueDate());
+
+        // Guardar el cargo actualizado en la base de datos
+        return chargeRepository.save(existingCharge);
+    }
+
+
+    @Transactional
+    @Override
+    public void logicalDeleteCharge(Long chargeId) {
+        // Buscar el cargo por ID
+        Charge charge = chargeRepository.findById(chargeId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el Cargo con id: " + chargeId));
+
+        // Marcar como inactivo (eliminación lógica)
+        charge.setActive(false);
+        chargeRepository.save(charge);
+
+        // Eliminar lógicamente los pagos asociados al cargo
+        paymentService.logicalDeletePaymentsByChargeId(chargeId);
+    }
+}
+

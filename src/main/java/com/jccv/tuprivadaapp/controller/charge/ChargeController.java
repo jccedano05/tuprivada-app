@@ -2,6 +2,8 @@ package com.jccv.tuprivadaapp.controller.charge;
 
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
@@ -35,42 +37,49 @@ public class ChargeController {
 
     @PostMapping("/apply")
     public ResponseEntity<?> applyCharge(@RequestBody ChargeDto chargeRequestDto) {
+        System.out.println("Entro al apply");
         try {
             if (chargeRequestDto.getResidentIds() == null || chargeRequestDto.getResidentIds().isEmpty()) {
                 return ResponseEntity.badRequest().body("Debe proporcionar al menos un residente.");
             }
 
             List<Resident> residents = residentService.getResidentsByIds(chargeRequestDto.getResidentIds());
-            Charge charge = chargeService.createCharge(chargeRequestDto);
+            Charge charge = null;
+            if(chargeRequestDto.getId() != null){
+                charge = chargeService.findById(chargeRequestDto.getId());
+            }else{
+                System.out.println();
+                charge = chargeService.createCharge(chargeRequestDto);
+            }
+            System.out.println(charge.toString());
             List<Payment> payments = paymentService.applyChargeToResidents(residents, charge);
 
             return new ResponseEntity<>(payments, HttpStatus.OK);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (BadRequestException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/{chargeId}")
+    public ResponseEntity<?> updateCharge(@PathVariable Long chargeId, @RequestBody ChargeDto chargeDto) {
+        System.out.println("Entro al update");
+        try {
+            // Llama al servicio para actualizar el cargo
+            Charge updatedCharge = chargeService.updateCharge(chargeId, chargeDto);
+            return new ResponseEntity<>(updatedCharge, HttpStatus.OK);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-//    EL getAllResidentsWithCondominiumId fue modificado para traerlo como Dto
-//    @PostMapping("/apply/all")
-//    public ResponseEntity<?> applyChargeToAllResidents(@RequestBody ChargeDto chargeRequestDto) {
-//
-//        try {
-//        List<Resident> allResidents = residentService.getAllResidentsWithCondominiumId(chargeRequestDto.getCondominiumId());
-//        Charge charge = chargeService.createCharge(chargeRequestDto);
-//        List<Payment> payments = paymentService.applyChargeToResidents(allResidents, charge);
-//
-//        return new ResponseEntity<>(payments, HttpStatus.OK);
-//    }catch (
-//                ResourceNotFoundException e) {
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-//        }catch (
-//                BadRequestException e) {
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-//        }
-//        catch (Exception e) {
-//        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
-//    }
+
+
 
     @GetMapping("/condominium/{condominiumId}")
     public ResponseEntity<List<ChargeSummaryDto>> getChargesByCondominiumId(
@@ -92,6 +101,19 @@ public class ChargeController {
             return new ResponseEntity<>(charges, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/{chargeId}")
+    public ResponseEntity<String> logicalDeleteCharge(@PathVariable Long chargeId) {
+        try {
+            // Llamar al servicio para eliminar el cargo de manera lógica
+            chargeService.logicalDeleteCharge(chargeId);
+            return ResponseEntity.ok("El cargo y sus pagos asociados fueron eliminados lógicamente.");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al eliminar el cargo.");
         }
     }
 

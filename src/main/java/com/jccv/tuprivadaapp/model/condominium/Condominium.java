@@ -13,6 +13,7 @@ import com.jccv.tuprivadaapp.model.notice.Notice;
 import com.jccv.tuprivadaapp.model.recurring_payment.RecurringPayment;
 import com.jccv.tuprivadaapp.model.contact.Contact;
 import com.jccv.tuprivadaapp.model.resident.Resident;
+import com.jccv.tuprivadaapp.model.survey.Survey;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -39,6 +40,7 @@ public class Condominium {
 
 
     @OneToMany(mappedBy = "condominium")
+    @ToString.Exclude
     @JsonIgnore  // Este lado se serializa
     private List<User> users;
 
@@ -46,46 +48,61 @@ public class Condominium {
 
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "condominium")
     @JsonManagedReference  // Este lado se serializa
+    @ToString.Exclude
     private Address address;
 
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "condominium")
     @JsonBackReference  // Este lado no se serializa
+    @ToString.Exclude
     private AccountBank accountBank;
 
     // Relación con los residentes
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "condominium")
     @JsonIgnore  // Este lado se serializa
+    @ToString.Exclude
     private List<Resident> residents;
 
     // Posible relación con pagos recurrentes
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "condominium")
     @JsonIgnore  // Este lado se serializa
+    @ToString.Exclude
     private List<RecurringPayment> recurringPayments;
 
 
     // Relación con los residentes
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "condominium")
     @JsonIgnore  // Este lado se serializa
+    @ToString.Exclude
     private List<Contact> contacts;
 
     // Relación OneToMany con Notice
     @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @ToString.Exclude
     private List<Notice> notices;
 
     // Relación OneToMany con Notice
     @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @ToString.Exclude
     private List<Faq> Faqs;
 
 
     // Relación OneToMany con Notice
     @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @ToString.Exclude
     private List<Finance> finances;
 
     @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @ToString.Exclude
     private List<Charge> charges;  // Lista de cargos asociados al condominio
+
+    @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<Survey> surveys;
+
 
 }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "faqs")
@@ -22,6 +23,7 @@ public class Faq {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "condominium_id")
     @JsonBackReference
+    @ToString.Exclude
     private Condominium condominium;
 
     @NotBlank(message = "La pregunta no puede estar vacía")

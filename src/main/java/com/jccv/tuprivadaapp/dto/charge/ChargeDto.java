@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class ChargeDto {
+    private Long id;
     private List<Long> residentIds;  // IDs de los residentes a los que se les aplicará el cargo
     private double amount;           // Monto del cargo
     private String titleTypePayment;

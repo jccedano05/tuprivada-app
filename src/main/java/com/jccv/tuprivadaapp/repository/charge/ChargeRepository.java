@@ -11,7 +11,9 @@ import java.util.List;
 @Repository
 public interface ChargeRepository extends JpaRepository<Charge, Long> {
 
-    List<Charge> findByCondominiumIdOrderByChargeDateDesc(Long condominiumId);
+    // Solo traerá los cargos activos
+    List<Charge> findByCondominiumIdAndIsActiveTrueOrderByChargeDateDesc(Long condominiumId);
 
-    List<Charge> findByCondominiumIdAndChargeDateBetweenOrderByChargeDateDesc(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate);
+    // Solo traerá los cargos activos dentro del rango de fechas
+    List<Charge> findByCondominiumIdAndChargeDateBetweenAndIsActiveTrueOrderByChargeDateDesc(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate);
 }

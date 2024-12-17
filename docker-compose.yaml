@@ -5,7 +5,7 @@ services:
     image: postgres:latest
     restart: always
     environment:
-      POSTGRES_DB: tuprivada
+      POSTGRES_DB: aynicomunidad
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: cedano123321
     volumes:
@@ -22,7 +22,8 @@ services:
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tuprivada
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/aynicomunidad
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tuprivada
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: cedano123321
       JWT_SECRET_KEY: 237270aff7bec8705312cf6353fbd7d05284d2c6f9cf2c37de675ee57ae9d133  # JWT secret key

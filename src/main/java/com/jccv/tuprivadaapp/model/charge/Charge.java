@@ -38,11 +38,13 @@ public class Charge {
 
     @OneToMany(mappedBy = "charge", cascade = CascadeType.ALL)
     @JsonManagedReference
+    @ToString.Exclude
     private List<Payment> payments;  // Lista de pagos asociados a este cargo
 
     @ManyToOne
     @JoinColumn(name = "condominium_id", nullable = false)
     @JsonBackReference
+    @ToString.Exclude
     private Condominium condominium;  // Referencia al condominio
 
 }

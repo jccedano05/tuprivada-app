@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDate;
 
@@ -23,6 +24,7 @@ public class Finance {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "condominium_id")
     @JsonBackReference
+    @ToString.Exclude
     private Condominium condominium;
 
     @Column(nullable = false)

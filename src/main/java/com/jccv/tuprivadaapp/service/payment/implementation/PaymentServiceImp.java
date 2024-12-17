@@ -2,8 +2,11 @@ package com.jccv.tuprivadaapp.service.payment.implementation;
 
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentSummaryDto;
 import com.jccv.tuprivadaapp.dto.payment.mapper.PaymentMapper;
+import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
+import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
@@ -13,10 +16,12 @@ import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
 import com.jccv.tuprivadaapp.service.accountBank.AccountBankService;
 import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
+import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +30,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,29 +45,37 @@ public class PaymentServiceImp implements PaymentService {
     private final ResidentService residentService;
 
     private final AccountBankService accountBankService;
-
     private final ChargeService chargeService;
 
+    private final PollingNotificationService pollingNotificationService;
+
+
     @Autowired
-    public PaymentServiceImp(PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, AccountBankService accountBankService, ChargeService chargeService) {
+    public PaymentServiceImp(PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, AccountBankService accountBankService, @Lazy ChargeService chargeService, PollingNotificationService pollingNotificationService) {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
         this.residentService = residentService;
         this.accountBankService = accountBankService;
         this.chargeService = chargeService;
+        this.pollingNotificationService = pollingNotificationService;
     }
 
     @Override
     public PaymentDto create(PaymentDto paymentDto) {
             Resident resident = residentService.getResidentById(paymentDto.getResidentId()).orElseThrow(()->new ResourceNotFoundException("Resident not found with id: " + paymentDto.getResidentId()));
              Payment payment = paymentRepository.save(paymentMapper.toEntity(paymentDto,resident));
+
+
+        pollingNotificationService.createNotification(PollingNotificationDto.builder()
+                .title("Nuevo Cargo aplicado")
+                .message("El cargo '" + payment.getCharge().getDescription() + "' ya esta disponible para pagar")
+                .userId(resident.getUser().getId())
+                .read(false)
+                .build());
+
             return paymentMapper.toDTO(payment);
     }
 
-    @Override
-    public List<Payment> createAll(List<Payment> payments) {
-        return paymentRepository.saveAll(payments);
-    }
 
     @Override
     public PaymentDto findById(Long id) {
@@ -75,6 +89,7 @@ public class PaymentServiceImp implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentDto update(PaymentDto paymentDto) {
         Payment existingPayment = paymentRepository.findById(paymentDto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with Id: " + paymentDto.getId()));
@@ -90,6 +105,48 @@ public class PaymentServiceImp implements PaymentService {
 
         return paymentMapper.toDTO(updatedPayment);
     }
+
+    public void deletePaymentByResidentIdAndChargeId(Long residentId, Long chargeId) {
+        Payment payment = paymentRepository.findByResidentIdAndChargeId(residentId, chargeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for residentId: "
+                        + residentId + " and chargeId: " + chargeId));
+
+        paymentRepository.delete(payment);
+    }
+
+    @Override
+    @Transactional
+    public void updateIsPaidStatus(Long chargeId, Long residentId, Boolean isPaid) {
+
+        Payment payment = paymentRepository.findByResidentIdAndChargeId(residentId, chargeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for residentId: "
+                        + residentId + " and chargeId: " + chargeId));
+        payment.setPaid(isPaid);
+        paymentRepository.save(payment);
+
+       if(isPaid){
+           Resident resident = residentService.getResidentById(residentId).orElseThrow(()-> new ResourceNotFoundException("No se encontro al residente con el ID: " + residentId));
+           Charge charge = chargeService.findById(chargeId);
+           pollingNotificationService.createNotification(PollingNotificationDto.builder()
+                   .title("Pago generado exitosamente.!")
+                   .message(charge.getDescription())
+                   .userId(resident.getUser().getId())
+                   .read(false)
+                   .build());
+       }
+    }
+
+    @Override
+    public List<PaymentResidentDetailsDto> getAllPaymentsByChargeId(Long chargeId) {
+        return paymentRepository.findAllByChargeId(chargeId);
+    }
+
+    @Override
+    @Transactional
+    public void logicalDeletePaymentsByChargeId(Long chargeId) {
+        paymentRepository.markPaymentsAsDeletedByChargeId(chargeId);
+    }
+
 
     @Override
     public void deleteById(Long id) {
@@ -187,6 +244,7 @@ public class PaymentServiceImp implements PaymentService {
     @Transactional
     public List<Payment> applyChargeToResidents(List<Resident> residents, Charge charge) {
         // Genera los pagos para cada residente
+        System.out.println("applyChargeToResidents");
         List<Payment> payments = residents.stream().map(resident -> {
             Payment payment = Payment.builder()
 //                    .amount(chargeDto.getAmount())
@@ -199,7 +257,16 @@ public class PaymentServiceImp implements PaymentService {
                     .isPaid(false)
                     .build();
 
-            return paymentRepository.save(payment);
+            Payment paymentSaved = paymentRepository.save(payment);
+
+            pollingNotificationService.createNotification(PollingNotificationDto.builder()
+                    .title("Nuevo Cargo aplicado")
+                    .message("El cargo '" + payment.getCharge().getDescription() + "' ya esta disponible para pagar")
+                    .userId(resident.getUser().getId())
+                    .read(false)
+                    .build());
+
+            return paymentSaved;
         }).collect(Collectors.toList());
 
 

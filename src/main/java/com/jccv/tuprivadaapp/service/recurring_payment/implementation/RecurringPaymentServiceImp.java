@@ -117,59 +117,63 @@ public class RecurringPaymentServiceImp  implements RecurringPaymentService {
     }
 
 
+
     // Revisa todos los días a las 4:00 AM si hay pagos que deben procesarse
-    @Scheduled(cron = "0 0 10 * * *", zone = "America/Mexico_City")
-    @Transactional
-    public void processPayments() {
-        Logger logger = LoggerFactory.getLogger(getClass());
-        logger.info("Starting processPayments...");
+//    @Scheduled(cron = "0 0 10 * * *", zone = "America/Mexico_City")
+//    @Transactional
+//    public void processPayments() {
+//        Logger logger = LoggerFactory.getLogger(getClass());
+//        logger.info("Starting processPayments...");
+//
+//
+//        try {
+//            List<RecurringPayment> paymentsDueToday = recurringPaymentRepository.findByNextPaymentDate();
+//
+//
+//            for (RecurringPayment recurringPayment : paymentsDueToday) {
+//
+//                try {
+//
+//                    List<Payment> payments = new ArrayList<>();
+//                    recurringPayment.getResidents().forEach(paymentResident -> {
+//
+//                        if(paymentResident.isActiveResident()){
+//                            Payment payment = Payment.builder()
+////                                    .amount(recurringPayment.getAmount())
+////                                    .typePayment(recurringPayment.getTitle())
+////                                    .description(recurringPayment.getDescription())
+////                                    .chargeDate(LocalDateTime.now())
+////                                    .dueDate(LocalDateTime.now().plusDays(recurringPayment.getDaysToDueDate()))
+//                                    .resident(paymentResident)
+//                                    .isPaid(false)
+//                                    .build();
+//                            payments.add(payment);
+//                        }
+//
+//                        oneSignalPushNotificationRepository.findByUserId(paymentResident.getUser().getId()).forEach(oneSignalPushNotification -> {
+//                            oneSignalPushNotificationService.sendNotification(oneSignalPushNotification.getSubscriptionId(), "Cobro Generado", recurringPayment.getDescription());
+//                        });
+//
+//                    });
+//
+//                    paymentService.createAll(payments);
+//
+//
+//                    recurringPayment.scheduleNextPayment();  // Programa el próximo pago
+//                    recurringPaymentRepository.save(recurringPayment);  // Guarda el próximo pago
+//
+//                } catch (Exception e) {
+//                    logger.error("Error processing recurring payment ID {}: {}", recurringPayment.getId(), e.getMessage(), e);
+//                    // Puedes manejar el error aquí, por ejemplo, enviando una alerta o rollback manual si es necesario
+//                    System.out.println(e);
+//                }
+//            }
+//        } catch (Exception e) {
+//            logger.error("Error during processPayments: {}", e.getMessage(), e);
+//        }
+//        logger.info("Finished processPayments.");
+//    }
 
 
-        try {
-            List<RecurringPayment> paymentsDueToday = recurringPaymentRepository.findByNextPaymentDate();
-
-
-            for (RecurringPayment recurringPayment : paymentsDueToday) {
-
-                try {
-
-                    List<Payment> payments = new ArrayList<>();
-                    recurringPayment.getResidents().forEach(paymentResident -> {
-
-                        if(paymentResident.isActiveResident()){
-                            Payment payment = Payment.builder()
-//                                    .amount(recurringPayment.getAmount())
-//                                    .typePayment(recurringPayment.getTitle())
-//                                    .description(recurringPayment.getDescription())
-//                                    .chargeDate(LocalDateTime.now())
-//                                    .dueDate(LocalDateTime.now().plusDays(recurringPayment.getDaysToDueDate()))
-                                    .resident(paymentResident)
-                                    .isPaid(false)
-                                    .build();
-                            payments.add(payment);
-                        }
-
-                        oneSignalPushNotificationRepository.findByUserId(paymentResident.getUser().getId()).forEach(oneSignalPushNotification -> {
-                            oneSignalPushNotificationService.sendNotification(oneSignalPushNotification.getSubscriptionId(), "Cobro Generado", recurringPayment.getDescription());
-                        });
-
-                    });
-
-                    paymentService.createAll(payments);
-
-
-                    recurringPayment.scheduleNextPayment();  // Programa el próximo pago
-                    recurringPaymentRepository.save(recurringPayment);  // Guarda el próximo pago
-
-                } catch (Exception e) {
-                    logger.error("Error processing recurring payment ID {}: {}", recurringPayment.getId(), e.getMessage(), e);
-                    // Puedes manejar el error aquí, por ejemplo, enviando una alerta o rollback manual si es necesario
-                    System.out.println(e);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error during processPayments: {}", e.getMessage(), e);
-        }
-        logger.info("Finished processPayments.");
-    }
 }
+

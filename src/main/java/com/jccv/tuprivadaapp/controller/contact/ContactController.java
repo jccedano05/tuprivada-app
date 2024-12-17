@@ -36,9 +36,16 @@ public class ContactController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Contact> getContactById(@PathVariable Long id) {
-        return ResponseEntity.ok(contactService.findById(id));
-    }
+    public ResponseEntity<?> getContactById(@PathVariable Long id) {
+       try{
+           return ResponseEntity.ok(contactService.findById(id));
+       } catch (ResourceNotFoundException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    }catch (BadRequestException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }catch (Exception e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }}
 
     @GetMapping("/residents/{residentId}")
     public List<Contact> getContactsByResidentId(@PathVariable Long residentId) {
@@ -101,4 +108,5 @@ public class ContactController {
         contactService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+    
 }

@@ -3,7 +3,9 @@ package com.jccv.tuprivadaapp.controller.payment;
 
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentSummaryDto;
+import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.resident.Resident;
@@ -33,7 +35,7 @@ public class PaymentController {
 
 
     @PostMapping
-    public ResponseEntity<?> createAddress(@RequestBody PaymentDto paymentDto) {
+    public ResponseEntity<?> createPayment(@RequestBody PaymentDto paymentDto) {
         try{
             return new ResponseEntity<>(paymentService.create(paymentDto), HttpStatus.CREATED);
         }
@@ -42,8 +44,27 @@ public class PaymentController {
         }
     }
 
+    @DeleteMapping("/charges/{chargeId}/residents/{residentId}")
+    public ResponseEntity<?> deletePaymentByChargeIdAndResidentId(
+            @PathVariable Long chargeId,
+            @PathVariable Long residentId) {
+       try{
+           paymentService.deletePaymentByResidentIdAndChargeId(residentId, chargeId );
+           return new ResponseEntity<>("Cobro a residente borrado correctamente", HttpStatus.NO_CONTENT);
+       }
+       catch (ResourceNotFoundException e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+       }
+       catch (BadRequestException e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+       }
+       catch (Exception e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+    }
+
     @GetMapping
-    public ResponseEntity<?> getAllAddresses() {
+    public ResponseEntity<?> getAllPayments() {
         try{
             return new ResponseEntity<>(paymentService.findAll(), HttpStatus.OK);
         }
@@ -53,7 +74,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getAddressById(@PathVariable Long id) {
+    public ResponseEntity<?> getPaymentById(@PathVariable Long id) {
         try{
             return new ResponseEntity<>(paymentService.findById(id), HttpStatus.OK);
         }
@@ -63,13 +84,41 @@ public class PaymentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAddress(@PathVariable Long id, @RequestBody PaymentDto paymentDto) {
+    public ResponseEntity<?> updatePayment(@PathVariable Long id, @RequestBody PaymentDto paymentDto) {
         try{
             paymentDto.setId(id);
             return new ResponseEntity<>(paymentService.update(paymentDto), HttpStatus.OK);
         }
         catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+    @GetMapping("/charges/{chargeId}")
+    public ResponseEntity<?> getPaymentsByChargeId(@PathVariable Long chargeId) {
+        try {
+            List<PaymentResidentDetailsDto> payments = paymentService.getAllPaymentsByChargeId(chargeId);
+            return ResponseEntity.ok(payments);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/charges/{chargeId}/residents/{residentId}/updateIsPaidStatus")
+    public ResponseEntity<?> updateIsPaidStatus(@PathVariable Long chargeId, @PathVariable Long residentId, @RequestBody Boolean isPaid) {
+        try{
+            paymentService.updateIsPaidStatus(chargeId, residentId, isPaid);
+            return new ResponseEntity<>("Actualizacion del pago exitosa.!", HttpStatus.OK);
+        }
+        catch (BadRequestException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     @PreAuthorize(USER_LEVEL)

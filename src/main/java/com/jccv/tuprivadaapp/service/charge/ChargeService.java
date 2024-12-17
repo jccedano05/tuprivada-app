@@ -4,6 +4,7 @@ import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +13,9 @@ public interface ChargeService {
 
     public Charge createCharge(ChargeDto chargeDto);
 
+    Charge updateCharge(Long chargeId, ChargeDto chargeDto);
+
+
     Charge findById(Long chargeId);
 
     List<ChargeSummaryDto> getChargesByCondominiumId(Long condominiumId);
@@ -19,4 +23,6 @@ public interface ChargeService {
     List<ChargeSummaryDto> getChargesByCondominiumIdAndDateRange(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate);
 
 
+    @Transactional
+    void logicalDeleteCharge(Long chargeId);
 }

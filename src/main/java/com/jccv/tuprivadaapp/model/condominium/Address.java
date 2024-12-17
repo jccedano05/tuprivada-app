@@ -44,6 +44,7 @@ public class Address {
     @JoinColumn(name = "condominium_id", unique = true)
     @JsonProperty("condominium_id")  // Solo muestra el ID del condominium
     @JsonBackReference  // Este lado no se serializa
+    @ToString.Exclude
     private Condominium condominium;
 
 }

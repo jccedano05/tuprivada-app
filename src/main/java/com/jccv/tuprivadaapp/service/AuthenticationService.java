@@ -124,6 +124,28 @@ public class AuthenticationService {
     }
 
 
+    // AuthenticationService.java
+
+    @Transactional
+    public UserDto updatePasswordUser(Long userId, String newPassword) {
+        User user = userFacade.findById(userId);  // Busca al usuario en la base de datos
+
+        if (user == null) {
+            throw new ResourceNotFoundException("Usuario no encontrado");
+        }
+        System.out.println("New password: " + newPassword);
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        System.out.println("password enconde: " + user.getPassword());
+
+
+        // Guardar los cambios en la base de datos
+        user = userFacade.save(user);
+
+        return userMapper.convertUserToUserDto(user);
+    }
+
+
 //    public AuthenticatedUserDto register(UserDto request) {
 //        if (request.getUsername() == null) {
 //            throw new ResourceNotFoundException("El campo usuario no debe quedar vacio");
@@ -210,6 +232,7 @@ public class AuthenticationService {
                 .token(token)
                 .role(user.getRole())
                 .condominium(user.getCondominium())
+                .username(user.getUsername())
                 .build();
     }
 

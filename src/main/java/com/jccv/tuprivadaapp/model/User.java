@@ -52,12 +52,14 @@ public class User implements UserDetails {
     private Role role;
 
     @JsonIgnore
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "condominium_id")
     private Condominium condominium;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonManagedReference  // Este lado se serializa
+    @ToString.Exclude
     private List<Token> tokens;
 
     @Override

@@ -92,6 +92,7 @@ public class ContactServiceImp implements ContactService {
 
     @Override
     public void deleteById(Long id) {
-        contactRepository.deleteById(id);
+        Contact contact = findById(id);
+        contactRepository.delete(contact);
     }
 }

@@ -2,6 +2,7 @@ package com.jccv.tuprivadaapp.service.payment;
 
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentSummaryDto;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
@@ -13,7 +14,6 @@ import java.util.List;
 
 public interface PaymentService {
     public PaymentDto create(PaymentDto paymentDto);
-    public List<Payment> createAll(List<Payment> paymentDtos);
 
     public PaymentDto findById(Long id);
 
@@ -37,4 +37,13 @@ public interface PaymentService {
 
     public List<Payment> applyChargeToResidents(List<Resident> residents, Charge charge);
 
+
+    public void deletePaymentByResidentIdAndChargeId(Long residentId, Long chargeId);
+
+
+    public void updateIsPaidStatus(Long chargeId, Long residentId, Boolean isPaid);
+
+    List<PaymentResidentDetailsDto> getAllPaymentsByChargeId(Long chargeId);
+
+    void logicalDeletePaymentsByChargeId(Long chargeId);
 }

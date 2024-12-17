@@ -52,11 +52,13 @@ public class RecurringPayment {
     )
 //@ManyToMany(mappedBy = "recurringPayments")
     @JsonBackReference
+    @ToString.Exclude
 private List<Resident> residents;
 
     @ManyToOne
     @JoinColumn(name = "condominium_id")
     @JsonBackReference
+    @ToString.Exclude
     private Condominium condominium;
 
     // Métodos para calcular la próxima fecha de pago

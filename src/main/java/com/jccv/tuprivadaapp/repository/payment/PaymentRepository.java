@@ -1,26 +1,32 @@
 package com.jccv.tuprivadaapp.repository.payment;
 
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
+
+    Optional<Payment> findByResidentIdAndChargeId(Long residentId, Long chargeId);
+
 
     // Buscar pagos vencidos que no han sido pagados y que aún no se les ha aplicado el recargo
     @Query("SELECT p FROM Payment p WHERE p.isPaid = false AND p.charge.dueDate < CURRENT_TIMESTAMP AND p.isPenaltyApplied = false AND p.isDeleted = false")
     List<Payment> findOverduePayments();
 
-//    // Obtener pagos NO pagados y NO eliminados para un residente
-//    Page<Payment> findByResidentIdAndIsPaidFalseAndIsDeletedFalse(Long residentId, Pageable pageable);
+
 
     @Query("SELECT new com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto(" +
             "p.id, p.isPaid, p.isDeleted, c.chargeDate, c.titleTypePayment, c.amount, c.description, c.isActive, c.dueDate, c.penaltyValue) " +
@@ -92,83 +98,25 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             p.charge.dueDate ASC
     """)
     List<LocalDateTime> getRelevantDueDateForResident(Long residentId);
+
+    // Query para obtener pagos por chargeId
+    @Query("SELECT new com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto( " +
+            "p.id, r.id, c.id, r.user.firstName, r.user.lastName, p.isPaid, p.charge.amount, p.charge.description, " +
+            "r.addressResident.street, r.addressResident.extNumber, r.addressResident.intNumber " +
+            ") " +
+            "FROM Payment p " +
+            "JOIN p.resident r " +
+            "JOIN r.user u " +
+            "JOIN p.charge c " +
+            "WHERE c.id = :chargeId")
+    List<PaymentResidentDetailsDto> findAllByChargeId(Long chargeId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Payment p SET p.isDeleted = true WHERE p.charge.id = :chargeId")
+    int markPaymentsAsDeletedByChargeId(@Param("chargeId") Long chargeId);
+
+
 }
-
-
-
-//package com.jccv.tuprivadaapp.repository.payment;
-//
-//import com.jccv.tuprivadaapp.model.payment.Payment;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.PageRequest;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.jpa.repository.JpaRepository;
-//import org.springframework.data.jpa.repository.Query;
-//import org.springframework.stereotype.Repository;
-//
-//import java.time.LocalDateTime;
-//import java.util.List;
-//
-//@Repository
-//public interface PaymentRepository extends JpaRepository<Payment, Long> {
-//
-//    // Buscar pagos vencidos que no han sido pagados y que aún no se les ha aplicado el recargo
-//    @Query("SELECT p FROM Payment p WHERE p.isPaid = false AND p.dueDate < CURRENT_TIMESTAMP AND p.isPenaltyApplied = false AND p.isDeleted = false")
-//    List<Payment> findOverduePayments();
-//
-//    // Método para obtener pagos no pagados y no eliminados de un residente
-////    List<Payment> findByResidentAndIsPaidFalseAndIsDeletedFalse(Resident resident);
-//
-//    // Consulta con pageable para limitar los resultados de pagos NO pagados, NO eliminados
-//    Page<Payment> findByResidentIdAndIsPaidFalseAndIsDeletedFalse(Long residentId, Pageable pageable);
-//    // Consulta con pageable para limitar los resultados de pagos pagados, NO eliminados
-//    Page<Payment> findByResidentIdAndIsPaidTrueAndIsDeletedFalseOrderByChargeDateDesc(Long residentId, Pageable pageable);
-//
-//
-//    // Consulta con pageable para pagos de un residente en un rango de fechas
-//    Page<Payment> findByResidentIdAndChargeDateBetweenAndIsDeletedFalseOrderByChargeDateDesc(Long residentId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
-//
-//    // Obtener el total de dinero que debe un residente (no pagado y no eliminado)
-//    @Query("SELECT SUM(p.amount) FROM Payment p WHERE p.resident.id = :residentId AND p.isPaid = false AND p.isDeleted = false")
-//    Double getTotalDebtForResident(Long residentId);
-//
-//    // Obtener la fecha de próximo vencimiento que no tenga recargo aplicado
-////    @Query("SELECT p.dueDate FROM Payment p WHERE p.resident.id = :residentId AND p.isPaid = false AND p.isDeleted = false AND p.isPenaltyApplied = false AND p.dueDate >= CURRENT_TIMESTAMP ORDER BY p.dueDate ASC")
-////    LocalDateTime getNextDueDateForResident(Long residentId);
-////
-////    @Query("SELECT p.dueDate FROM Payment p WHERE p.resident.id = :residentId AND p.isPaid = false AND p.isDeleted = false AND p.isPenaltyApplied = false AND p.dueDate < CURRENT_TIMESTAMP ORDER BY p.dueDate DESC")
-////    LocalDateTime getLastDueDateForResident(Long residentId);
-//
-////    @Query("""
-////    SELECT p.dueDate
-////    FROM Payment p
-////    WHERE p.resident.id = :residentId
-////    AND p.isPaid = false
-////    AND p.isDeleted = false
-////    ORDER BY
-////        CASE
-////            WHEN p.dueDate < CURRENT_TIMESTAMP THEN 1
-////            ELSE 0
-////        END,
-////        p.dueDate ASC
-////""")
-////    List<LocalDateTime> getRelevantDueDateForResident(Long residentId);
-//
-//    @Query("""
-//SELECT p.dueDate
-//FROM Payment p
-//WHERE p.resident.id = :residentId
-//AND p.isPaid = false
-//AND p.isDeleted = false
-//ORDER BY
-//    CASE
-//        WHEN p.dueDate >= CURRENT_TIMESTAMP THEN 0
-//        ELSE 1
-//    END,
-//    p.dueDate ASC
-//""")
-//    List<LocalDateTime> getRelevantDueDateForResident(Long residentId);
-//
-//}
 
 

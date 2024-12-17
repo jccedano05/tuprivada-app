@@ -36,6 +36,7 @@ public class AddressResident {
     @JoinColumn(name = "resident_id", nullable = false)
     @NotNull(message = "El residente no debe estar vacío")
     @JsonBackReference  // Evita recursión infinita al serializar
+    @ToString.Exclude
     private Resident resident;
 
 }

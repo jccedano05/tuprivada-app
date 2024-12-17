@@ -15,7 +15,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @Entity
 @Builder
 @Table(name = "residents")
@@ -35,6 +34,7 @@ public class Resident  {
 
     @OneToOne(mappedBy = "resident",fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true) // Agregar cascade y orphanRemoval si aplica
 //    @JsonManagedReference  // Este lado se serializa
+    @ToString.Exclude
     private AddressResident addressResident;
 
 
@@ -45,15 +45,18 @@ public class Resident  {
 
     @ManyToOne
     @JoinColumn(name = "condominium_id")
+    @ToString.Exclude
     private Condominium condominium;
 
 
     @ManyToMany(mappedBy = "residents")  // La relación inversa, mapea a la lista "residents" de RecurringPayment
     @JsonManagedReference  // Este lado se serializa
+    @ToString.Exclude
     private List<RecurringPayment> recurringPayments;
 
     @OneToMany(mappedBy = "resident", cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
     @JsonManagedReference  // Este lado se serializa
+    @ToString.Exclude
     private List<Payment> payments;
 
 

@@ -35,10 +35,12 @@ public class Payment {
     @ManyToOne
     @JoinColumn(name = "resident_id", nullable = false)
     @JsonBackReference
+    @ToString.Exclude
     private Resident resident;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "charge_id", nullable = false)
     @JsonBackReference
+    @ToString.Exclude
     private Charge charge;
 }

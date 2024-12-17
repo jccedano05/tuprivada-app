@@ -36,5 +36,6 @@ public class AccountBank {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "condominium_id", referencedColumnName = "id", unique = true)
     @JsonManagedReference  // Este lado se serializa
+    @ToString.Exclude
     private Condominium condominium;
 }

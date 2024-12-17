@@ -1,9 +1,6 @@
 package com.jccv.tuprivadaapp.controller;
 
-import com.jccv.tuprivadaapp.dto.auth.UserDto;
-import com.jccv.tuprivadaapp.dto.auth.UserUpdateByAdminDto;
-import com.jccv.tuprivadaapp.dto.auth.UserUpdateBySuperadminDto;
-import com.jccv.tuprivadaapp.dto.auth.UserUpdateDto;
+import com.jccv.tuprivadaapp.dto.auth.*;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.Role;
@@ -40,40 +37,56 @@ public class AuthenticationController {
         }
     }
 
-
-
-    @PutMapping("updateBySuperadmin/{userId}")
-    @PreAuthorize(MAX_LEVEL)
-    public ResponseEntity<?> updateUserBySuperAdmin(@PathVariable Long userId,
-                                        @RequestBody UserUpdateBySuperadminDto request) {
+    @PostMapping("updatePasswordUser/{userId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updatePassword(@PathVariable Long userId,
+                                                    @RequestBody UserChangePasswordDto resp) {
         try {
-            return ResponseEntity.ok(authenticationService.updateUser(userId, request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            UserDto updatedUser = authenticationService.updatePasswordUser(userId, resp.getNewPassword());
+            return ResponseEntity.ok(updatedUser);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (BadRequestException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PutMapping("updateByAdmin/{userId}")
-    @PreAuthorize(CONDOMINIUM_LEVEL)
-    public ResponseEntity<?> updateUserByAdmin(@PathVariable Long userId,
-                                        @RequestBody UserUpdateByAdminDto request) {
-        try {
-            return ResponseEntity.ok(authenticationService.updateUser(userId, request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
-    }
 
-    @PutMapping("updateByNormalUser/{userId}")
-    @PreAuthorize(USER_LEVEL)
-    public ResponseEntity<?> updateUser(@PathVariable Long userId,
-                                        @RequestBody UserUpdateDto request) {
-        try {
-            return ResponseEntity.ok(authenticationService.updateUser(userId, request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
-    }
+//
+//    @PutMapping("updateBySuperadmin/{userId}")
+//    @PreAuthorize(MAX_LEVEL)
+//    public ResponseEntity<?> updateUserBySuperAdmin(@PathVariable Long userId,
+//                                        @RequestBody UserUpdateBySuperadminDto request) {
+//        try {
+//            return ResponseEntity.ok(authenticationService.updateUser(userId, request));
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+//    }
+//
+//    @PutMapping("updateByAdmin/{userId}")
+//    @PreAuthorize(CONDOMINIUM_LEVEL)
+//    public ResponseEntity<?> updateUserByAdmin(@PathVariable Long userId,
+//                                        @RequestBody UserUpdateByAdminDto request) {
+//        try {
+//            return ResponseEntity.ok(authenticationService.updateUser(userId, request));
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+//    }
+//
+//    @PutMapping("updateByNormalUser/{userId}")
+//    @PreAuthorize(USER_LEVEL)
+//    public ResponseEntity<?> updateUser(@PathVariable Long userId,
+//                                        @RequestBody UserUpdateDto request) {
+//        try {
+//            return ResponseEntity.ok(authenticationService.updateUser(userId, request));
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+//    }
 
 //
 //    @PostMapping("registerAdmin")
