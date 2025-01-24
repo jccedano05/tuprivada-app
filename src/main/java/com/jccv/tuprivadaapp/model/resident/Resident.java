@@ -27,6 +27,13 @@ public class Resident  {
     @Column(name = "is_active_resident")
     private boolean isActiveResident = true;
 
+
+    @Column(name = "balance", nullable = false)
+    private Double balance = 0.0;
+
+
+
+
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

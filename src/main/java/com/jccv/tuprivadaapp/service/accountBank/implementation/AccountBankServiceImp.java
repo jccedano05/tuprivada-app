@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.accountBank.implementation;
 
+import com.google.api.gax.rpc.NotFoundException;
 import com.jccv.tuprivadaapp.dto.acoountBank.AccountBankDto;
 import com.jccv.tuprivadaapp.dto.acoountBank.mapper.AccountBankMapper;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountBankServiceImp implements AccountBankService {
@@ -40,39 +42,42 @@ public class AccountBankServiceImp implements AccountBankService {
     @Override
     @Transactional
     public AccountBankDto create(AccountBankDto accountBankDto) {
-        User user = userSessionInformation.getUserInformationFromSecurityContext();
-        //Only Superadmin or Admin with the same condominium can create
-        if(user.getRole() != Role.SUPERADMIN && user.getCondominium().getId() != accountBankDto.getCondominiumId()){
-             throw new BadRequestException("User cant create ");
-        }
-        Optional<AccountBank> accountBank =  accountBankRepository.findByCondominiumId(accountBankDto.getCondominiumId());
-        if(accountBank.isPresent()){
-            throw new BadRequestException("Ya existe cuenta ligada a este condominio");
-        }
+
+
         AccountBank accountBankSaved =  accountBankRepository.save(accountBankMapper.convertToAccountBankModel(accountBankDto));
         return accountBankMapper.convertToAccountBankDto(accountBankSaved);
     }
 
     @Override
     public AccountBankDto findById(Long id) {
-        return accountBankMapper.convertToAccountBankDto(accountBankRepository.findById(id).orElseThrow(()-> new BadRequestException("AccountBank not founded")));
+        return accountBankMapper.convertToAccountBankDto(accountBankRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("AccountBank not founded")));
     }
 
     @Override
     public List<AccountBankDto> findAll() {
-         return accountBankRepository.findAll().stream().map(accountBank -> accountBankMapper.convertToAccountBankDto(accountBank)).toList();
+         return accountBankRepository.findAll().stream().map(accountBankMapper::convertToAccountBankDto).toList();
     }
 
     @Override
-    public AccountBankDto update(AccountBankDto accountBankDto) {
+    public AccountBankDto update(Long id, AccountBankDto accountBankDto) {
+    if(id != null){
+        accountBankDto.setId(id);
+    }
         AccountBank accountBankSaved =  accountBankRepository.save(accountBankMapper.convertToAccountBankModel(accountBankDto));
         return accountBankMapper.convertToAccountBankDto(accountBankSaved);
     }
 
+
+
     @Override
-    public AccountBankDto findAccountBankByCondominium(Long condominiumId) {
-        return accountBankMapper.convertToAccountBankDto(accountBankRepository.findByCondominiumId(condominiumId).orElseThrow(()->  new ResourceNotFoundException("No se encontro un condominio con el Id: " + condominiumId)));
+    public List<AccountBankDto> findAllByCondominiumId(Long condominiumId) {
+        List<AccountBank> accounts = accountBankRepository.findAllByCondominiumId(condominiumId);
+        return accounts.stream()
+                .map(accountBankMapper::convertToAccountBankDto)
+                .collect(Collectors.toList());
     }
+
+
     @Override
     @Transactional(readOnly = true)
     public AccountBankDto findAccountBankByResident(Long residentId) {
@@ -93,6 +98,7 @@ public class AccountBankServiceImp implements AccountBankService {
 
     @Override
     public void deleteById(Long id) {
-        //TODO Borrado logico o no
+    AccountBank bank = accountBankMapper.convertToAccountBankModel(findById(id));
+        accountBankRepository.delete(bank);
     }
 }

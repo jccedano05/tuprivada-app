@@ -15,11 +15,12 @@ public interface AccountBankService {
 
     public List<AccountBankDto> findAll();
 
-    public AccountBankDto update(AccountBankDto accountBankDto);
+    public AccountBankDto update(Long id, AccountBankDto accountBankDto);
 
     public void deleteById(Long id);
 
 
-    public AccountBankDto findAccountBankByCondominium(Long accountBankId);
+
+    List<AccountBankDto> findAllByCondominiumId(Long condominiumId);
 
 }

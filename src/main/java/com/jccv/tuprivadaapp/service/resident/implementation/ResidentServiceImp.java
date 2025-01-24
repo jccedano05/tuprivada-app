@@ -10,6 +10,7 @@ import com.jccv.tuprivadaapp.repository.resident.ResidentRepository;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -72,5 +73,18 @@ public class ResidentServiceImp implements ResidentService {
     @Override
     public List<Resident> getResidentsByIds(List<Long> residentIds) {
         return residentRepository.findAllById(residentIds);
+    }
+
+    @Transactional
+    @Override
+    public void updateBalanceResident(Long residentId, Double amountToInclude){
+        Resident resident = residentRepository.findById(residentId).orElseThrow(() -> new ResourceNotFoundException("Resident not found with id: " + residentId));
+        updateBalanceResident(resident, amountToInclude);
+    }
+    @Transactional
+    @Override
+    public void updateBalanceResident(Resident resident, Double amountToInclude){
+        resident.setBalance(resident.getBalance() + amountToInclude);
+        saveResident(resident);
     }
 }

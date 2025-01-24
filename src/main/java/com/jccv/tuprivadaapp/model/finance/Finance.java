@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "finances")
@@ -35,4 +36,6 @@ public class Finance {
 
     @Column(nullable = false)
     private double billQuantity;  // Gasto o egreso
+
+
 }

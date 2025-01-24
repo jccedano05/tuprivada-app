@@ -2,6 +2,7 @@ package com.jccv.tuprivadaapp.service.finance.implementation;
 
 import com.jccv.tuprivadaapp.dto.finance.FinanceDto;
 import com.jccv.tuprivadaapp.dto.finance.AnnualFinanceDto;
+import com.jccv.tuprivadaapp.dto.finance.FinanceSummaryDto;
 import com.jccv.tuprivadaapp.dto.finance.mapper.FinanceMapper;
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
@@ -64,8 +65,9 @@ public class FinanceServiceImp implements FinanceService {
                 .map(financeMapper::toDTO);
     }
 
-    public List<FinanceDto> getFinancesCondominiumByYear(Long condominiumId, int year) {
-        return financeRepository.findFinancesByYear(condominiumId, year).stream().map(finance -> financeMapper.toDTO(finance)).toList();
+    public List<FinanceSummaryDto> getFinancesCondominiumByYear(Long condominiumId, int year) {
+//        return financeRepository.findFinancesByYear(condominiumId, year).stream().map(finance -> financeMapper.toDTO(finance)).toList();
+        return financeRepository.findFinanceSummaryByCondominiumAndYear(condominiumId, year);
     }
 
     @Override

@@ -23,6 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.List;
 
 @Service
@@ -146,51 +149,42 @@ public class AuthenticationService {
     }
 
 
-//    public AuthenticatedUserDto register(UserDto request) {
-//        if (request.getUsername() == null) {
-//            throw new ResourceNotFoundException("El campo usuario no debe quedar vacio");
-//        }
-//        Optional<User> userFounded = repository.findByUsername(request.getUsername());
-//
-//        if (userFounded.isPresent()) {
-//            throw new BadRequestException("El usuario ya existe");
-//        }
-//        if(request.getRole() != Role.SUPERADMIN && request.getCondominiumId() == null){
-//            throw new BadRequestException("Para crear este tipo de usuario debes asignarle un condominiumId");
-//        }
-//        User user;
-//        switch (request.getRole()) {
-//            case SUPERADMIN: {
-//                user = buildUser(request, new User());
-//                user = userFacade.save(user, request);
-//                break;
-//            }
-//            case ADMIN: {
-//                Admin admin = buildUser(request, new Admin());
-//                user = userFacade.saveAdmin(admin);
-//                break;
-//            }
-//            case RESIDENT: {
-//                Resident resident = buildUser(request, new Resident());
-//                user = userFacade.saveResident(resident);
-//                break;
-//            }
-//            case WORKER: {
-//                Worker worker = buildUser(request, new Worker());
-//                user = userFacade.saveWorker(worker);
-//                break;
-//            }
-//            default: {
-//                throw new BadRequestException("Rol no soportado, elegir rol correcto");
-//            }
-//        }
-//
-//        String token = jwtService.generateToken(user);
-//        saveToken(user, token);
-//
-//        return authenticatedUserResponse(user, token);
-////        return new AuthenticationResponse(token);
-//    }
+    @Transactional
+    public UserDto changePassword(UserChangePasswordDto resp) {
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userFacade.findByUsername(username);
+
+
+
+
+        if (user == null) {
+            throw new ResourceNotFoundException("Usuario no encontrado");
+        }
+
+        if (!passwordEncoder.matches(resp.getOldPassword(), user.getPassword())) {
+            throw new BadRequestException("La contraseña antigua no es correcta");
+        }
+
+        if(!resp.getConfirmPassword().equals(resp.getNewPassword())){
+            throw new BadRequestException("las nuevas contraseñas no coinciden");
+        }
+        if(user.getPassword().length() < 6){
+            throw new BadRequestException("la nueva contraseña debe tener al menos 6 caracteres");
+        }
+
+
+        System.out.println("entro al error");
+        user.setPassword(passwordEncoder.encode(resp.getNewPassword()));
+
+
+        // Guardar los cambios en la base de datos
+        user = userFacade.save(user);
+        System.out.println(user.toString());
+        return userMapper.convertUserToUserDto(user);
+    }
+
 
 
     private <T extends User> T buildUser(UserDto request, T user) {
@@ -225,15 +219,7 @@ public class AuthenticationService {
     }
 
     private AuthenticatedUserDto authenticatedUserResponse(User user, String token){
-        return AuthenticatedUserDto.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .token(token)
-                .role(user.getRole())
-                .condominium(user.getCondominium())
-                .username(user.getUsername())
-                .build();
+        return UserMapper.userResponseToDto(user,token);
     }
 
 

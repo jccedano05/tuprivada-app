@@ -10,4 +10,6 @@ import lombok.*;
 public class UserChangePasswordDto {
     private Long userId;
     private String newPassword;
+    private String confirmPassword;
+    private String oldPassword;
 }

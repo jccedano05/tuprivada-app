@@ -25,6 +25,7 @@ public class ResidentMapper {
         ResidentDto dto = new ResidentDto();
         dto.setId(resident.getId());
         dto.setActiveResident(resident.isActiveResident());
+        dto.setBalance(resident.getBalance());
         dto.setUserId(resident.getUser() != null ? resident.getUser().getId() : null);
         return dto;
     }
@@ -34,6 +35,7 @@ public class ResidentMapper {
         ResidentRelevantInfoDto dto = new ResidentRelevantInfoDto();
         dto.setId(resident.getId());
         dto.setActiveResident(resident.isActiveResident());
+        dto.setBalance(resident.getBalance());
 
         if(resident.getUser() != null){
             dto.setUserDto(userMapper.convertUserToUserDto(resident.getUser()));
@@ -50,6 +52,7 @@ public class ResidentMapper {
         Resident resident = new Resident();
         resident.setId(dto.getId());
         resident.setActiveResident(dto.isActiveResident());
+        resident.setBalance(dto.getBalance());
 
 
         return resident;

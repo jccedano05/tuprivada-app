@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.dto.payment.mapper;
 
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,19 @@ public class PaymentMapper {
 //                .description(payment.getDescription())
                 .isPaid(payment.isPaid())
                 .residentId(payment.getResident().getId()) // Asumiendo que quieres el ID del residente
+                .build();
+    }
+
+    public PaymentDto toDTO(PaymentResidentDetailsDto payment) {
+        return PaymentDto.builder()
+                .id(payment.getPaymentId())
+//                .amount(payment.getAmount())
+//                .chargeDate(payment.getChargeDate())
+//                .dueDate(payment.getDueDate())
+//                .typePayment(payment.getTypePayment())
+//                .description(payment.getDescription())
+                .isPaid(payment.isPaid())
+                .residentId(payment.getResidentId()) // Asumiendo que quieres el ID del residente
                 .build();
     }
 

@@ -20,4 +20,5 @@ public class ResidentDto {
     private boolean isActiveResident;
     private Long userId;  // Referencia al ID del usuario, no al objeto completo
     private AddressResidentDto addressResidentDto;
+    private Double balance;
 }

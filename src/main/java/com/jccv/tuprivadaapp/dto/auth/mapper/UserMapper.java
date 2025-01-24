@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.dto.auth.mapper;
 
+import com.jccv.tuprivadaapp.dto.auth.AuthenticatedUserDto;
 import com.jccv.tuprivadaapp.dto.auth.UserDto;
 import com.jccv.tuprivadaapp.model.User;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
@@ -23,7 +24,9 @@ public class UserMapper {
                 .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .bankPersonalReference(user.getBankPersonalReference())
                 .role(user.getRole());
+
         if (user.getCondominium() != null) {
             userDto.condominiumId(user.getCondominium().getId());
         }
@@ -37,10 +40,25 @@ public class UserMapper {
                 .id(userDto.getId())
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
+                .bankPersonalReference(userDto.getBankPersonalReference())
                 .role(userDto.getRole()).build();
+
         if (userDto.getCondominiumId() != null) {
             user.setCondominium(condominiumService.findById(userDto.getCondominiumId()));
         }
         return user;
+    }
+
+    static public AuthenticatedUserDto userResponseToDto(User user, String token){
+        return AuthenticatedUserDto.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .token(token)
+                .role(user.getRole())
+                .condominium(user.getCondominium())
+                .username(user.getUsername())
+                .bankPersonalReference(user.getBankPersonalReference())
+                .build();
     }
 }

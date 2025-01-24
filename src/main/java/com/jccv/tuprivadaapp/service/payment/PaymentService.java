@@ -46,4 +46,5 @@ public interface PaymentService {
     List<PaymentResidentDetailsDto> getAllPaymentsByChargeId(Long chargeId);
 
     void logicalDeletePaymentsByChargeId(Long chargeId);
+
 }

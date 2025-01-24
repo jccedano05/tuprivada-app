@@ -63,7 +63,17 @@ public class PaymentServiceImp implements PaymentService {
     @Override
     public PaymentDto create(PaymentDto paymentDto) {
             Resident resident = residentService.getResidentById(paymentDto.getResidentId()).orElseThrow(()->new ResourceNotFoundException("Resident not found with id: " + paymentDto.getResidentId()));
+
+
+
              Payment payment = paymentRepository.save(paymentMapper.toEntity(paymentDto,resident));
+
+//EN EL CREATE NO SE NECESITA GUARDAR EL NUEVO BALANCE PORQUE NO PAGA AUN
+        // Guardar el depósito y el residente actualizado
+//        double newBalance = resident.getBalance() - paymentDto.getAmount();
+//        resident.setBalance(newBalance);
+//
+//        residentService.saveResident(resident);
 
 
         pollingNotificationService.createNotification(PollingNotificationDto.builder()
@@ -103,29 +113,46 @@ public class PaymentServiceImp implements PaymentService {
 
         updatedPayment = paymentRepository.save(updatedPayment);
 
+
         return paymentMapper.toDTO(updatedPayment);
     }
 
+
+    @Transactional
     public void deletePaymentByResidentIdAndChargeId(Long residentId, Long chargeId) {
         Payment payment = paymentRepository.findByResidentIdAndChargeId(residentId, chargeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for residentId: "
                         + residentId + " and chargeId: " + chargeId));
 
+        residentService.updateBalanceResident(residentId, -payment.getCharge().getAmount());
         paymentRepository.delete(payment);
+
     }
+
+
 
     @Override
     @Transactional
     public void updateIsPaidStatus(Long chargeId, Long residentId, Boolean isPaid) {
+        Resident resident = residentService.getResidentById(residentId).orElseThrow(()-> new ResourceNotFoundException("No se encontro al residente con el ID: " + residentId));
+
+
 
         Payment payment = paymentRepository.findByResidentIdAndChargeId(residentId, chargeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for residentId: "
                         + residentId + " and chargeId: " + chargeId));
         payment.setPaid(isPaid);
+
+        double balanceAfterPaid = resident.getBalance() - payment.getCharge().getAmount();
+        if(isPaid && balanceAfterPaid < 0){
+            throw new BadRequestException("Saldo insuficiente para hacer el pago");
+        }
         paymentRepository.save(payment);
 
-       if(isPaid){
-           Resident resident = residentService.getResidentById(residentId).orElseThrow(()-> new ResourceNotFoundException("No se encontro al residente con el ID: " + residentId));
+
+        double newBalance = 0;
+        if(isPaid){
+             newBalance -= payment.getCharge().getAmount();
            Charge charge = chargeService.findById(chargeId);
            pollingNotificationService.createNotification(PollingNotificationDto.builder()
                    .title("Pago generado exitosamente.!")
@@ -133,7 +160,11 @@ public class PaymentServiceImp implements PaymentService {
                    .userId(resident.getUser().getId())
                    .read(false)
                    .build());
+       }else{
+
+             newBalance += payment.getCharge().getAmount();
        }
+        residentService.updateBalanceResident(resident, newBalance);
     }
 
     @Override
@@ -214,7 +245,6 @@ public class PaymentServiceImp implements PaymentService {
         return  PaymentSummaryDto.builder()
                 .nextDueDate(getRelevantDueDateForResident(residentId))
                 .totalDebt(getTotalDebtForResident(residentId))
-                .accountBankDto(accountBankService.findAccountBankByResident(residentId))
                 .build();
     }
 
@@ -244,7 +274,6 @@ public class PaymentServiceImp implements PaymentService {
     @Transactional
     public List<Payment> applyChargeToResidents(List<Resident> residents, Charge charge) {
         // Genera los pagos para cada residente
-        System.out.println("applyChargeToResidents");
         List<Payment> payments = residents.stream().map(resident -> {
             Payment payment = Payment.builder()
 //                    .amount(chargeDto.getAmount())

@@ -2,6 +2,9 @@ package com.jccv.tuprivadaapp.service.charge.implementation;
 
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
+import com.jccv.tuprivadaapp.dto.payment.mapper.PaymentMapper;
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
@@ -29,14 +32,16 @@ public class ChargeServiceImp implements ChargeService {
     private final CondominiumService condominiumService;
     private final PaymentService paymentService;
     private final ResidentService residentService;
+    private final PaymentMapper paymentMapper;
 
     @Autowired
-    public ChargeServiceImp(ChargeRepository chargeRepository, CondominiumService condominiumService, @Lazy PaymentService paymentService, ResidentService residentService) {
+    public ChargeServiceImp(ChargeRepository chargeRepository, CondominiumService condominiumService, @Lazy PaymentService paymentService, ResidentService residentService, PaymentMapper paymentMapper) {
         this.chargeRepository = chargeRepository;
         this.condominiumService = condominiumService;
 
         this.paymentService = paymentService;
         this.residentService = residentService;
+        this.paymentMapper = paymentMapper;
     }
 
 //    public Charge createCharge(ChargeDto chargeDto, List<Payment> payments) {
@@ -153,6 +158,20 @@ public Charge createCharge(ChargeDto chargeDto) {
         Charge existingCharge = chargeRepository.findById(chargeId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró el Cargo con id: " + chargeId));
 
+
+        double newPaymentCharge = existingCharge.getAmount() - chargeDto.getAmount();
+
+
+
+        //UPDATE BALANCE OF RESIDENTS
+    if(chargeDto.getAmount() != existingCharge.getAmount()){
+          paymentService.getAllPaymentsByChargeId(chargeId).stream().filter(PaymentResidentDetailsDto::isPaid)
+                   .forEach(payment -> {
+                       residentService.updateBalanceResident(payment.getResidentId(), newPaymentCharge);
+                   }); ;
+        }
+
+
         // Actualizar los campos del cargo
         existingCharge.setTitleTypePayment(chargeDto.getTitleTypePayment());
         existingCharge.setAmount(chargeDto.getAmount());
@@ -162,7 +181,6 @@ public Charge createCharge(ChargeDto chargeDto) {
         existingCharge.setChargeDate(chargeDto.getChargeDate());
         existingCharge.setDueDate(chargeDto.getDueDate());
 
-        // Guardar el cargo actualizado en la base de datos
         return chargeRepository.save(existingCharge);
     }
 
@@ -180,6 +198,10 @@ public Charge createCharge(ChargeDto chargeDto) {
 
         // Eliminar lógicamente los pagos asociados al cargo
         paymentService.logicalDeletePaymentsByChargeId(chargeId);
+        paymentService.getAllPaymentsByChargeId(chargeId).stream().filter(PaymentResidentDetailsDto::isPaid)
+                .forEach(payment -> {
+                    residentService.updateBalanceResident(payment.getResidentId(), charge.getAmount());
+                }); ;
     }
 }
 

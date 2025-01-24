@@ -23,6 +23,7 @@ public class UserDto {
     private String password;
     private Long condominiumId;
     private Role role;
+    private String bankPersonalReference;
 
 
 

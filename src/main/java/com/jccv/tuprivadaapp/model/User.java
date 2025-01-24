@@ -51,6 +51,9 @@ public class User implements UserDetails {
     @Valid()
     private Role role;
 
+
+    private String bankPersonalReference;
+
     @JsonIgnore
     @ToString.Exclude
     @ManyToOne

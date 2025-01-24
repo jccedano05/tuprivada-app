@@ -19,12 +19,12 @@ public class PaymentsScreenController {
         this.paymentsScreenService = paymentsScreenService;
     }
 
-    @GetMapping("resident")
-    public ResponseEntity<?> getHomeInformationResident() {
-        try {
-            return new ResponseEntity<>(paymentsScreenService.getResidentPaymetsScreenInformation(), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
-    }
+//    @GetMapping("resident")
+//    public ResponseEntity<?> getHomeInformationResident() {
+//        try {
+//            return new ResponseEntity<>(paymentsScreenService.getResidentPaymetsScreenInformation(), HttpStatus.OK);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+//        }
+//    }
 }

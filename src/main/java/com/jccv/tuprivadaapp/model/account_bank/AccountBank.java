@@ -1,6 +1,5 @@
 package com.jccv.tuprivadaapp.model.account_bank;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import jakarta.persistence.*;
@@ -20,22 +19,29 @@ public class AccountBank {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Account Bank - Must cointain the account name ")
+    @NotBlank(message = "Account Bank - Must contain the payment type")
+    private String paymentType;
+
+    @NotBlank(message = "Account Bank - Must contain the account name")
     private String accountName;
-    @NotBlank(message = "Account Bank - Must cointain the bank name ")
+
+    @NotBlank(message = "Account Bank - Must contain the bank name")
     private String bankName;
-    @NotBlank(message = "Account Bank - Must cointain the number account  ")
+
+    @NotBlank(message = "Account Bank - Must contain the number account")
     private String numberAccount;
-    @NotBlank(message = "Account Bank - Must cointain the clabe ")
+
+    @NotBlank(message = "Account Bank - Must contain the clabe")
     private String clabe;
-    @NotBlank(message = "Account Bank - Must cointain the reference ")
+
     private String reference;
 
+    // Nuevo campo booleano
+    private Boolean isGlobalReference = true;
 
-
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "condominium_id", referencedColumnName = "id", unique = true)
-    @JsonManagedReference  // Este lado se serializa
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "condominium_id", referencedColumnName = "id")
+    @JsonManagedReference
     @ToString.Exclude
     private Condominium condominium;
 }

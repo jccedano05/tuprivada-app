@@ -11,7 +11,6 @@ import lombok.*;
 @Builder
 
 public class AuthenticatedUserDto {
-
     private Long id;
     private String token;
     private String firstName;
@@ -19,4 +18,5 @@ public class AuthenticatedUserDto {
     private String username;
     private Role role;
     private Condominium condominium;
+    private String bankPersonalReference;
 }

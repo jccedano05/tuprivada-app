@@ -2,6 +2,7 @@ package com.jccv.tuprivadaapp.controller.finance;
 
 import com.jccv.tuprivadaapp.dto.finance.FinanceDto;
 import com.jccv.tuprivadaapp.dto.finance.AnnualFinanceDto;
+import com.jccv.tuprivadaapp.dto.finance.FinanceSummaryDto;
 import com.jccv.tuprivadaapp.service.finance.FinanceService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,7 @@ public class FinanceController {
     }
 
     @GetMapping("/condominiums/{condominiumId}/years/{year}")
-    public List<FinanceDto> getFinancesByYear(@PathVariable Long condominiumId, @PathVariable int year) {
+    public List<FinanceSummaryDto> getFinancesByYear(@PathVariable Long condominiumId, @PathVariable int year) {
         return financeService.getFinancesCondominiumByYear(condominiumId, year);
     }
 

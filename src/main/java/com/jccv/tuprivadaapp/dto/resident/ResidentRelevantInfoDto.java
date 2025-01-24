@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 public class ResidentRelevantInfoDto {
     private Long id;
     private boolean isActiveResident;
+    private String bankPersonalReference;
     private UserDto userDto;  // Referencia al ID del usuario, no al objeto completo
     private AddressResidentDto addressResidentDto;
+    private Double balance;
 }

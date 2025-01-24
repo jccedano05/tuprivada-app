@@ -23,31 +23,27 @@ public class PaymentsScreenService {
         this.accountBankService = accountBankService;
     }
 
-
-    public PaymentsScreenDto getResidentPaymetsScreenInformation(){
-
-      User user = userSessionInformation.getUserInformationFromSecurityContext();
-        System.out.println("****** USER ************");
-
-        System.out.println("username: " + user.getUsername());
-        System.out.println("condominiumId: " + user.getCondominium().getId());
-
-        AccountBankDto accountBankDto = accountBankService.findAccountBankByCondominium(user.getCondominium().getId());
-        System.out.println("accountBankDto: " + accountBankDto.getBankName());
-
-        ResidentAccountPaymentDetailsDto residentAccountPaymentDetailsDto = ResidentAccountPaymentDetailsDto.builder()
-                .balance(600)
-                .paymentDueDate("16/oct/24")
-                .accountBankDto(accountBankDto)
-                .build();
-
-        System.out.println("********* DESP DE Condominium service *******");
-
-      PaymentsScreenDto paymentsScreenDto = PaymentsScreenDto.builder()
-              .residentAccountPaymentDetailsDto(residentAccountPaymentDetailsDto)
-              .build();
-
-        return paymentsScreenDto;
-    }
+//
+//    public PaymentsScreenDto getResidentPaymetsScreenInformation(){
+//
+//      User user = userSessionInformation.getUserInformationFromSecurityContext();
+//
+//        AccountBankDto accountBankDto = accountBankService.findAccountBankByCondominium(user.getCondominium().getId());
+//        System.out.println("accountBankDto: " + accountBankDto.getBankName());
+//
+//        ResidentAccountPaymentDetailsDto residentAccountPaymentDetailsDto = ResidentAccountPaymentDetailsDto.builder()
+//                .balance(600)
+//                .paymentDueDate("16/oct/24")
+//                .accountBankDto(accountBankDto)
+//                .build();
+//
+//        System.out.println("********* DESP DE Condominium service *******");
+//
+//      PaymentsScreenDto paymentsScreenDto = PaymentsScreenDto.builder()
+//              .residentAccountPaymentDetailsDto(residentAccountPaymentDetailsDto)
+//              .build();
+//
+//        return paymentsScreenDto;
+//    }
 
 }

@@ -14,5 +14,4 @@ public class PaymentSummaryDto {
 
     private Double totalDebt;
     private LocalDateTime nextDueDate;
-    private AccountBankDto accountBankDto;
 }

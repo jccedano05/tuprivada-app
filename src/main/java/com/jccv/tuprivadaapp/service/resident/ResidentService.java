@@ -4,6 +4,7 @@ import com.jccv.tuprivadaapp.dto.resident.ResidentDto;
 import com.jccv.tuprivadaapp.dto.resident.ResidentRelevantInfoDto;
 import com.jccv.tuprivadaapp.model.contact.Contact;
 import com.jccv.tuprivadaapp.model.resident.Resident;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +23,7 @@ public interface ResidentService {
 
 
     List<Resident> getResidentsByIds(List<Long> residentIds);
+
+    public void updateBalanceResident(Long residentId, Double amountToInclude);
+    public void updateBalanceResident(Resident resident, Double amountToInclude);
 }

@@ -51,10 +51,10 @@ public class Condominium {
     @ToString.Exclude
     private Address address;
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "condominium")
+    @OneToMany(mappedBy = "condominium", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference  // Este lado no se serializa
     @ToString.Exclude
-    private AccountBank accountBank;
+    private List<AccountBank> accountBanks;
 
     // Relación con los residentes
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "condominium")

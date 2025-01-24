@@ -13,4 +13,6 @@ public class FinanceDto {
     private String date;
     private double incomeQuantity;
     private double billQuantity;
+    private double income;
+    private double bill;
 }
