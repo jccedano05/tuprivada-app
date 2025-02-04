@@ -3,17 +3,17 @@ package com.jccv.tuprivadaapp.service.calendar.implementation;
 import com.jccv.tuprivadaapp.dto.calendar.EventDto;
 import com.jccv.tuprivadaapp.dto.calendar.mapper.EventMapper;
 import com.jccv.tuprivadaapp.model.calendar.Event;
+import com.jccv.tuprivadaapp.model.calendar.UserEvent;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.repository.calendar.EventRepository;
+import com.jccv.tuprivadaapp.repository.calendar.UserEventRepository;
 import com.jccv.tuprivadaapp.service.calendar.EventService;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +23,7 @@ public class EventServiceImp implements EventService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
     private final CondominiumService condominiumService;
+    private final UserEventRepository userEventRepository;
 
     @Override
     public EventDto createEvent(EventDto eventDto) {
@@ -54,14 +55,6 @@ public class EventServiceImp implements EventService {
         return !eventRepository.existsById(id);
     }
 
-//    @Override
-//    public List<EventDto> getEventsByCondominiumAndMonth(Long condominiumId, int month, int year) {
-//        List<Event> events = eventRepository.findByCondominiumIdAndMonth(condominiumId, month, year);
-//        return events.stream()
-//                .map(eventMapper::eventToEventDto)
-//                .collect(Collectors.toList());
-//    }
-
     @Override
     public Map<String, List<EventDto>> getEventsByCondominiumAndMonth(Long condominiumId, int month, int year) {
         List<Event> events = eventRepository.findByCondominiumIdAndMonth(condominiumId, month, year);
@@ -78,5 +71,25 @@ public class EventServiceImp implements EventService {
         }
 
         return eventsByDate;
+    }
+
+    @Override
+    public List<EventDto> getNextEvent(Long condominiumId) {
+        LocalDate today = LocalDate.now();
+        List<Event> events = eventRepository.findNextEventByCondominiumId(condominiumId, today);
+
+        // Agrupamos los eventos por fecha
+        Map<LocalDate, List<Event>> eventsByDate = events.stream()
+                .collect(Collectors.groupingBy(Event::getDate));
+
+        // Obtenemos el primer día con eventos
+        Optional<LocalDate> firstEventDay = eventsByDate.keySet().stream().min(Comparator.naturalOrder());
+
+        // Si existe ese día, devolvemos los eventos de ese día, de lo contrario una lista vacía
+        return firstEventDay
+                .map(date -> eventsByDate.get(date).stream()
+                        .map(eventMapper::eventToEventDto)
+                        .collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
     }
 }

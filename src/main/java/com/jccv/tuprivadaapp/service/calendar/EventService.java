@@ -10,4 +10,6 @@ public interface EventService {
     EventDto updateEvent(Long id, EventDto eventDto);
     boolean deleteEvent(Long id);
     Map<String, List<EventDto>> getEventsByCondominiumAndMonth(Long condominiumId, int month, int year);
+
+    List<EventDto> getNextEvent(Long condominiumId);
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -18,4 +19,12 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByCondominiumIdAndMonth(@Param("condominiumId") Long condominiumId,
                                             @Param("month") int month,
                                             @Param("year") int year);
+
+    // Buscar eventos del día actual o posteriores para un condominio
+    @Query("SELECT e FROM Event e WHERE e.condominium.id = :condominiumId " +
+            "AND e.date >= :currentDate ORDER BY e.date ASC")
+    List<Event> findNextEventByCondominiumId(@Param("condominiumId") Long condominiumId,
+                                             @Param("currentDate") LocalDate currentDate);
+
+
 }

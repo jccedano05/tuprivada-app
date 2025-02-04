@@ -24,6 +24,7 @@ public class Event {
     private LocalDate date; // Formato: YYYY-MM-DD
     private String startTime;  // Formato: HH:MM
     private String endTime;  // Formato: HH:MM
+    private String location;
 
     @ManyToOne
     @JoinColumn(name = "condominium_id")

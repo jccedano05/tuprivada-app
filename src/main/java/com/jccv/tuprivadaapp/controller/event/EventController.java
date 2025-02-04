@@ -63,4 +63,14 @@ public class EventController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/next/{condominiumId}")
+    public ResponseEntity<?> getNextEvent(@PathVariable Long condominiumId) {
+        try {
+            List<EventDto> nextEventsDay = eventService.getNextEvent(condominiumId);
+            return new ResponseEntity<>(nextEventsDay, HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
