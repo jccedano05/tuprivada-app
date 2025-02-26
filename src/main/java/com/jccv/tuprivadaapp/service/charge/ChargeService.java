@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.charge;
 
+import com.jccv.tuprivadaapp.dto.charge.AnnualChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
 import com.jccv.tuprivadaapp.model.charge.Charge;
@@ -21,6 +22,9 @@ public interface ChargeService {
     List<ChargeSummaryDto> getChargesByCondominiumId(Long condominiumId);
 
     List<ChargeSummaryDto> getChargesByCondominiumIdAndDateRange(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate);
+
+    // En ChargeService.java
+    AnnualChargeSummaryDto getAnnualChargeSummary(Long condominiumId, int year);
 
 
     @Transactional

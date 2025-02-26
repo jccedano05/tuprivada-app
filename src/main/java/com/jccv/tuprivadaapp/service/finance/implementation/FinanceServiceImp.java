@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.finance.implementation;
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.finance.FinanceDto;
 import com.jccv.tuprivadaapp.dto.finance.AnnualFinanceDto;
 import com.jccv.tuprivadaapp.dto.finance.FinanceSummaryDto;
@@ -11,6 +12,7 @@ import com.jccv.tuprivadaapp.repository.condominium.CondominiumRepository;
 import com.jccv.tuprivadaapp.repository.finance.FinanceRepository;
 import com.jccv.tuprivadaapp.service.finance.FinanceService;
 import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
 import com.jccv.tuprivadaapp.utils.DateFormats;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,13 +29,15 @@ public class FinanceServiceImp implements FinanceService {
     private final CondominiumRepository condominiumRepository;
     private final PollingNotificationService pollingNotificationService;
     private final DateFormats dateFormats;
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
 
-    public FinanceServiceImp(FinanceRepository financeRepository, FinanceMapper financeMapper, CondominiumRepository condominiumRepository, PollingNotificationService pollingNotificationService, DateFormats dateFormats) {
+    public FinanceServiceImp(FinanceRepository financeRepository, FinanceMapper financeMapper, CondominiumRepository condominiumRepository, PollingNotificationService pollingNotificationService, DateFormats dateFormats, OneSignalPushNotificationService oneSignalPushNotificationService) {
         this.financeRepository = financeRepository;
         this.financeMapper = financeMapper;
         this.condominiumRepository = condominiumRepository;
         this.pollingNotificationService = pollingNotificationService;
         this.dateFormats = dateFormats;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
     }
 
     @Override
@@ -47,6 +51,11 @@ public class FinanceServiceImp implements FinanceService {
                 .title("Reporte mensual de finanzas")
                 .message("Se creo el reporte de finanzas correspondiente a " + dateFormats.getMonthAndYear(financeDto.getDate()))
                 .read(false)
+                .build());
+
+        oneSignalPushNotificationService.sendPushToCondominium(financeDto.getCondominiumId(), PushNotificationRequest.builder()
+                .title("Nuevo Reporte de finanzas")
+                .message("Se creo el reporte de finanzas correspondiente all mes " + dateFormats.getMonthAndYear(financeDto.getDate()))
                 .build());
         return financeMapper.toDTO(savedFinance);
     }
@@ -63,6 +72,20 @@ public class FinanceServiceImp implements FinanceService {
         Pageable pageable = PageRequest.of(page, size);
         return financeRepository.findByCondominiumIdOrderByDateDesc(condominiumId, pageable)
                 .map(financeMapper::toDTO);
+    }
+
+    // En FinanceServiceImp.java
+    @Override
+    public FinanceSummaryDto getLatestFinanceByCondominiumId(Long condominiumId) {
+        // Valida que exista el condominio
+        if (!condominiumRepository.existsById(condominiumId)) {
+            throw new ResourceNotFoundException("Condominium not found with id " + condominiumId);
+        }
+
+        return financeRepository.findLatestFinanceSummaryByCondominiumId(condominiumId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontraron finanzas para el condominio con id: " + condominiumId
+                ));
     }
 
     public List<FinanceSummaryDto> getFinancesCondominiumByYear(Long condominiumId, int year) {

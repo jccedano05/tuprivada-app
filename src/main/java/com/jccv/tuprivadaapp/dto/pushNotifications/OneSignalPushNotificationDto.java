@@ -13,4 +13,5 @@ public class OneSignalPushNotificationDto {
     private Long userId;
     private String oneSignalId;
     private String subscriptionId;
+
 }

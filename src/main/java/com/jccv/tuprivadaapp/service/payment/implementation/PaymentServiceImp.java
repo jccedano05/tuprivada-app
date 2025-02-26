@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.payment.implementation;
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
@@ -18,6 +19,8 @@ import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
 import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
+
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +32,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shaded_package.org.apache.commons.collections.map.SingletonMap;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,39 +54,25 @@ public class PaymentServiceImp implements PaymentService {
 
     private final PollingNotificationService pollingNotificationService;
 
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
+
 
     @Autowired
-    public PaymentServiceImp(PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, AccountBankService accountBankService, @Lazy ChargeService chargeService, PollingNotificationService pollingNotificationService) {
+    public PaymentServiceImp(OneSignalPushNotificationService oneSignalPushNotificationService ,PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, AccountBankService accountBankService, @Lazy ChargeService chargeService, PollingNotificationService pollingNotificationService) {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
         this.residentService = residentService;
         this.accountBankService = accountBankService;
         this.chargeService = chargeService;
         this.pollingNotificationService = pollingNotificationService;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
     }
 
     @Override
     public PaymentDto create(PaymentDto paymentDto) {
             Resident resident = residentService.getResidentById(paymentDto.getResidentId()).orElseThrow(()->new ResourceNotFoundException("Resident not found with id: " + paymentDto.getResidentId()));
 
-
-
              Payment payment = paymentRepository.save(paymentMapper.toEntity(paymentDto,resident));
-
-//EN EL CREATE NO SE NECESITA GUARDAR EL NUEVO BALANCE PORQUE NO PAGA AUN
-        // Guardar el depósito y el residente actualizado
-//        double newBalance = resident.getBalance() - paymentDto.getAmount();
-//        resident.setBalance(newBalance);
-//
-//        residentService.saveResident(resident);
-
-
-        pollingNotificationService.createNotification(PollingNotificationDto.builder()
-                .title("Nuevo Cargo aplicado")
-                .message("El cargo '" + payment.getCharge().getDescription() + "' ya esta disponible para pagar")
-                .userId(resident.getUser().getId())
-                .read(false)
-                .build());
 
             return paymentMapper.toDTO(payment);
     }
@@ -155,11 +146,17 @@ public class PaymentServiceImp implements PaymentService {
              newBalance -= payment.getCharge().getAmount();
            Charge charge = chargeService.findById(chargeId);
            pollingNotificationService.createNotification(PollingNotificationDto.builder()
-                   .title("Pago generado exitosamente.!")
+                   .title("Pago: " + charge.getTitleTypePayment())
                    .message(charge.getDescription())
                    .userId(resident.getUser().getId())
                    .read(false)
                    .build());
+
+            oneSignalPushNotificationService.sendPushToUser(PushNotificationRequest.builder()
+                    .title("Pago Exitoso.!")
+                    .message(charge.getTitleTypePayment())
+                    .userId(resident.getUser().getId())
+                    .build());
        }else{
 
              newBalance += payment.getCharge().getAmount();
@@ -288,12 +285,13 @@ public class PaymentServiceImp implements PaymentService {
 
             Payment paymentSaved = paymentRepository.save(payment);
 
-            pollingNotificationService.createNotification(PollingNotificationDto.builder()
-                    .title("Nuevo Cargo aplicado")
-                    .message("El cargo '" + payment.getCharge().getDescription() + "' ya esta disponible para pagar")
-                    .userId(resident.getUser().getId())
-                    .read(false)
-                    .build());
+//            pollingNotificationService.createNotification(PollingNotificationDto.builder()
+//                    .title("Nuevo Cargo aplicado")
+//                    .message("El cargo '" + payment.getCharge().getDescription() + "' ya esta disponible para pagar")
+//                    .userId(resident.getUser().getId())
+//                    .read(false)
+//                    .build());
+
 
             return paymentSaved;
         }).collect(Collectors.toList());

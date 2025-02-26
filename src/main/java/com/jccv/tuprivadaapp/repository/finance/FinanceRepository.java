@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FinanceRepository extends JpaRepository<Finance, Long> {
@@ -42,4 +43,16 @@ public interface FinanceRepository extends JpaRepository<Finance, Long> {
     @Query("SELECT new com.jccv.tuprivadaapp.dto.finance.AnnualFinanceDto(YEAR(f.date), SUM(f.incomeQuantity), SUM(f.billQuantity)) " +
             "FROM Finance f WHERE f.condominium.id = :condominiumId GROUP BY YEAR(f.date)")
     List<AnnualFinanceDto> findFinancesGroupedByYear(Long condominiumId);
+
+    @Query("SELECT new com.jccv.tuprivadaapp.dto.finance.FinanceSummaryDto( " +
+            "f.id, f.condominium.id, FUNCTION('TO_CHAR', f.date, 'YYYY-MM-DD'), " +
+            "COALESCE(SUM(CASE WHEN fc.isExpense = false THEN fd.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN fc.isExpense = true THEN fd.amount ELSE 0 END), 0)) " +
+            "FROM Finance f " +
+            "LEFT JOIN FinanceDetail fd ON fd.finance.id = f.id " +
+            "LEFT JOIN FinanceCategory fc ON fc.id = fd.financeCategory.id " +
+            "WHERE f.condominium.id = :condominiumId " +
+            "AND f.date = (SELECT MAX(f2.date) FROM Finance f2 WHERE f2.condominium.id = :condominiumId) " +
+            "GROUP BY f.id, f.condominium.id, f.date")
+    Optional<FinanceSummaryDto> findLatestFinanceSummaryByCondominiumId(@Param("condominiumId") Long condominiumId);
 }

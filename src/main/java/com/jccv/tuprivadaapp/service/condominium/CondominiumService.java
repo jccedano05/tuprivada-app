@@ -17,6 +17,7 @@ public interface CondominiumService {
 
     public Condominium update(CondominiumDto condominiumDto);
 
+
     public void deleteById(Long id);
 
 }

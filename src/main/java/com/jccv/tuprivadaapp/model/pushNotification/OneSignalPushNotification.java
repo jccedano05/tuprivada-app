@@ -1,9 +1,8 @@
 package com.jccv.tuprivadaapp.model.pushNotification;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+
+import com.jccv.tuprivadaapp.model.User;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Data
@@ -18,7 +17,10 @@ public class OneSignalPushNotification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId; // ID del usuario residente
+    // Relación ManyToOne con la entidad User, ya que un usuario puede tener varias notificaciones
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user; // Cambiado de Long userId a User user
 
     private String oneSignalId; // OneSignal Player ID
     private String subscriptionId; // OneSignal Player ID

@@ -1,7 +1,9 @@
 package com.jccv.tuprivadaapp.service.calendar.implementation;
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.calendar.EventDto;
 import com.jccv.tuprivadaapp.dto.calendar.mapper.EventMapper;
+import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.model.calendar.Event;
 import com.jccv.tuprivadaapp.model.calendar.UserEvent;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
@@ -9,7 +11,10 @@ import com.jccv.tuprivadaapp.repository.calendar.EventRepository;
 import com.jccv.tuprivadaapp.repository.calendar.UserEventRepository;
 import com.jccv.tuprivadaapp.service.calendar.EventService;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
+import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,13 +22,24 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class EventServiceImp implements EventService {
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
     private final CondominiumService condominiumService;
     private final UserEventRepository userEventRepository;
+    private final PollingNotificationService pollingNotificationService;
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
+
+    @Autowired
+    public EventServiceImp(EventRepository eventRepository, EventMapper eventMapper, CondominiumService condominiumService, UserEventRepository userEventRepository, PollingNotificationService pollingNotificationService, OneSignalPushNotificationService oneSignalPushNotificationService) {
+        this.eventRepository = eventRepository;
+        this.eventMapper = eventMapper;
+        this.condominiumService = condominiumService;
+        this.userEventRepository = userEventRepository;
+        this.pollingNotificationService = pollingNotificationService;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
+    }
 
     @Override
     public EventDto createEvent(EventDto eventDto) {
@@ -34,6 +50,18 @@ public class EventServiceImp implements EventService {
         Event event = eventMapper.eventDtoToEvent(eventDto, condominium);
 
         event = eventRepository.save(event);
+
+        pollingNotificationService.createNotificationForCondominium(eventDto.getCondominiumId(), PollingNotificationDto.builder()
+                .title("Evento: "+ event.getTitle())
+                .message(event.getDescription())
+                .read(false)
+                .build());
+
+        oneSignalPushNotificationService.sendPushToCondominium(eventDto.getCondominiumId(), PushNotificationRequest.builder()
+                .title("Nuevo evento")
+                .message(event.getTitle())
+                .build());
+
         return eventMapper.eventToEventDto(event);
     }
 

@@ -1,9 +1,12 @@
 package com.jccv.tuprivadaapp.controller.charge;
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
+import com.jccv.tuprivadaapp.dto.charge.AnnualChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
+import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
@@ -11,6 +14,8 @@ import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
+import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,12 +32,16 @@ public class ChargeController {
     private final ResidentService residentService;
     private final ChargeService chargeService;
     private final PaymentService paymentService;
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
+    private final PollingNotificationService pollingNotificationService;
 
     @Autowired
-    public ChargeController(ResidentService residentService, ChargeService chargeService, PaymentService paymentService) {
+    public ChargeController(ResidentService residentService, ChargeService chargeService, PaymentService paymentService, OneSignalPushNotificationService oneSignalPushNotificationService, PollingNotificationService pollingNotificationService) {
         this.residentService = residentService;
         this.chargeService = chargeService;
         this.paymentService = paymentService;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
+        this.pollingNotificationService = pollingNotificationService;
     }
 
     @PostMapping("/apply")
@@ -51,8 +60,21 @@ public class ChargeController {
                 System.out.println();
                 charge = chargeService.createCharge(chargeRequestDto);
             }
-            System.out.println(charge.toString());
             List<Payment> payments = paymentService.applyChargeToResidents(residents, charge);
+
+            pollingNotificationService.createNotificationForByUserIds(chargeRequestDto.getResidentIds(),PollingNotificationDto.builder()
+                    .title(chargeRequestDto.getTitleTypePayment())
+                    .message("El cargo '" + charge.getDescription() + "' ya esta disponible para pagar")
+                    .read(false)
+                    .build());
+
+            oneSignalPushNotificationService.sendPushToResidentsList(chargeRequestDto.getResidentIds(),PushNotificationRequest.builder()
+                    .title("Nuevo cargo")
+                    .message("El cargo '" + chargeRequestDto.getTitleTypePayment() + "' ya esta disponible para pagar")
+                    .build());
+
+
+
 
             return new ResponseEntity<>(payments, HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
@@ -116,5 +138,21 @@ public class ChargeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al eliminar el cargo.");
         }
     }
+
+
+    // En ChargeController.java
+    @GetMapping("/annual-summary/{condominiumId}")
+    public ResponseEntity<AnnualChargeSummaryDto> getAnnualSummary(
+            @PathVariable Long condominiumId,
+            @RequestParam int year) {
+
+        try {
+            AnnualChargeSummaryDto summary = chargeService.getAnnualChargeSummary(condominiumId, year);
+            return new ResponseEntity<>(summary, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 }

@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.controller.finance;
 
 import com.jccv.tuprivadaapp.dto.finance.FinanceCategoryDto;
+import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.service.finance.FinanceCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,27 +29,51 @@ public class FinanceCategoryController {
 
     @PreAuthorize(RESIDENT_LEVEL)
     @GetMapping("/condominiums/{condominiumId}")
-    public ResponseEntity<List<FinanceCategoryDto>> getAllCategoriesByCondominium(@PathVariable Long condominiumId) {
-        List<FinanceCategoryDto> categories = financeCategoryService.getFinanceCategoriesByCondominium(condominiumId);
-        return new ResponseEntity<>(categories, HttpStatus.OK);
+    public ResponseEntity<?> getAllCategoriesByCondominium(@PathVariable Long condominiumId) {
+       try{
+           List<FinanceCategoryDto> categories = financeCategoryService.getFinanceCategoriesByCondominium(condominiumId);
+           return new ResponseEntity<>(categories, HttpStatus.OK);
+       } catch (ResourceNotFoundException e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+       }catch (Exception e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+       }
     }
 
 
     @PostMapping
-    public ResponseEntity<FinanceCategoryDto> createCategory(@RequestBody FinanceCategoryDto financeCategoryDTO) {
-        FinanceCategoryDto createdCategory = financeCategoryService.createFinanceCategory(financeCategoryDTO);
-        return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
+    public ResponseEntity<?> createCategory(@RequestBody FinanceCategoryDto financeCategoryDTO) {
+        try{
+            FinanceCategoryDto createdCategory = financeCategoryService.createFinanceCategory(financeCategoryDTO);
+            return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
+        }catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<FinanceCategoryDto> updateCategory(@PathVariable Long id, @RequestBody FinanceCategoryDto financeCategoryDTO) {
-        FinanceCategoryDto updatedCategory = financeCategoryService.updateFinanceCategory(id, financeCategoryDTO);
-        return new ResponseEntity<>(updatedCategory, HttpStatus.OK);
+    public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody FinanceCategoryDto financeCategoryDTO) {
+        try{
+            FinanceCategoryDto updatedCategory = financeCategoryService.updateFinanceCategory(id, financeCategoryDTO);
+            return new ResponseEntity<>(updatedCategory, HttpStatus.OK);
+        }catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
-        financeCategoryService.deleteFinanceCategory(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
+       try{
+           financeCategoryService.deleteFinanceCategory(id);
+           return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+       }catch (ResourceNotFoundException e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+       }catch (Exception e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+       }
     }
 }

@@ -17,7 +17,9 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "residents")
+@Table(name = "residents", indexes = {
+        @Index(name = "idx_resident_condominium", columnList = "condominium_id")
+})
 public class Resident  {
 
     @Id

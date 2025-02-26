@@ -3,8 +3,10 @@ package com.jccv.tuprivadaapp.controller.finance;
 import com.jccv.tuprivadaapp.dto.finance.FinanceDto;
 import com.jccv.tuprivadaapp.dto.finance.AnnualFinanceDto;
 import com.jccv.tuprivadaapp.dto.finance.FinanceSummaryDto;
+import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.service.finance.FinanceService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +40,18 @@ public class FinanceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return financeService.getFinancesByCondominium(condominiumId, page, size);
+    }
+
+    @GetMapping("/condominiums/{condominiumId}/latest")
+    public ResponseEntity<?> getLatestFinanceByCondominiumId(@PathVariable Long condominiumId) {
+        try {
+            FinanceSummaryDto financeSummary = financeService.getLatestFinanceByCondominiumId(condominiumId);
+            return ResponseEntity.ok(financeSummary);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/condominiums/{condominiumId}/years/{year}")

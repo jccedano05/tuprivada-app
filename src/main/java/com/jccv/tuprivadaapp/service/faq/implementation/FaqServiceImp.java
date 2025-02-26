@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.faq.implementation;
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.faq.FaqDto;
 import com.jccv.tuprivadaapp.dto.faq.mapper.FaqMapper;
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
@@ -9,6 +10,8 @@ import com.jccv.tuprivadaapp.repository.condominium.CondominiumRepository;
 import com.jccv.tuprivadaapp.repository.faq.FaqRepository;
 import com.jccv.tuprivadaapp.service.faq.FaqService;
 import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +23,15 @@ public class FaqServiceImp implements FaqService {
     private final FaqMapper faqMapper;
     private final CondominiumRepository condominiumRepository;;
     private final PollingNotificationService pollingNotificationService;
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
 
-    public FaqServiceImp(FaqRepository faqRepository, FaqMapper faqMapper, CondominiumRepository condominiumRepository, PollingNotificationService pollingNotificationService) {
+    @Autowired
+    public FaqServiceImp(FaqRepository faqRepository, FaqMapper faqMapper, CondominiumRepository condominiumRepository, PollingNotificationService pollingNotificationService, OneSignalPushNotificationService oneSignalPushNotificationService) {
         this.faqRepository = faqRepository;
         this.faqMapper = faqMapper;
         this.condominiumRepository = condominiumRepository;
         this.pollingNotificationService = pollingNotificationService;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
     }
 
     @Override
@@ -36,10 +42,16 @@ public class FaqServiceImp implements FaqService {
         Faq faq = faqMapper.toEntity(faqDto);
         Faq savedFaq = faqRepository.save(faq);
         pollingNotificationService.createNotificationForCondominium(faqDto.getCondominiumId(), PollingNotificationDto.builder()
-                .title("Nueva pregunta frecuente")
-                .message(faqDto.getQuestion())
+                .title(faqDto.getQuestion())
+                .message(faqDto.getAnswer())
                 .read(false)
                 .build());
+
+        oneSignalPushNotificationService.sendPushToCondominium(faq.getCondominium().getId(), PushNotificationRequest.builder()
+                .title("Nueva Pregunta Frecuente:")
+                .message(faqDto.getQuestion())
+                .build());
+
         return faqMapper.toDTO(savedFaq);
     }
 

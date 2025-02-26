@@ -16,6 +16,7 @@ public class AuthenticatedUserDto {
     private String firstName;
     private String lastName;
     private String username;
+    private String email;
     private Role role;
     private Condominium condominium;
     private String bankPersonalReference;

@@ -1,9 +1,9 @@
 package com.jccv.tuprivadaapp.service.transaction.implementation;
 
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
-import com.jccv.tuprivadaapp.dto.transaction.DepositDto;
-import com.jccv.tuprivadaapp.dto.transaction.DepositSummaryDto;
+import com.jccv.tuprivadaapp.dto.transaction.*;
 import com.jccv.tuprivadaapp.dto.transaction.mapper.DepositMapper;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
@@ -11,16 +11,16 @@ import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.model.transaction.Deposit;
 import com.jccv.tuprivadaapp.repository.transaction.DepositRepository;
 import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 import com.jccv.tuprivadaapp.service.transaction.DepositService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.Year;
-import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DepositServiceImp implements DepositService {
@@ -29,14 +29,16 @@ public class DepositServiceImp implements DepositService {
     private final ResidentService residentService;
     private final DepositMapper depositMapper;
     private final PollingNotificationService pollingNotificationService;
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
 
 
     @Autowired
-    public DepositServiceImp(DepositRepository depositRepository, ResidentService residentService, DepositMapper depositMapper, PollingNotificationService pollingNotificationService) {
+    public DepositServiceImp(DepositRepository depositRepository, ResidentService residentService, DepositMapper depositMapper, PollingNotificationService pollingNotificationService, OneSignalPushNotificationService oneSignalPushNotificationService) {
         this.depositRepository = depositRepository;
         this.residentService = residentService;
         this.depositMapper = depositMapper;
         this.pollingNotificationService = pollingNotificationService;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
     }
 
     @Transactional
@@ -58,14 +60,21 @@ public class DepositServiceImp implements DepositService {
         residentService.saveResident(resident);
         deposit.setBalanceAfterDeposit(newBalance);
 
+        Deposit depositSaved = depositRepository.save(deposit);
+
         pollingNotificationService.createNotification(PollingNotificationDto.builder()
-                .title("Deposito generado exitosamente.!")
-                .message("Se ha agregado el deposito de "+deposit.getAmount() + "a su cuenta")
+                .title("Deposito agregado exitosamente.!")
+                .message("Se ha agregado el deposito de "+deposit.getAmount() + "a su cuenta.")
                 .userId(resident.getUser().getId())
                 .read(false)
                 .build());
+        oneSignalPushNotificationService.sendPushToUser(PushNotificationRequest.builder()
+                .title("Deposito agregado.!")
+                .message("Se ha agregado el deposito de "+deposit.getAmount() + "a su cuenta.")
+                .userId(resident.getUser().getId())
+                .build());
 
-        return depositMapper.convertToDto(depositRepository.save(deposit));
+        return depositMapper.convertToDto(depositSaved);
     }
 
     @Transactional
@@ -160,4 +169,65 @@ public class DepositServiceImp implements DepositService {
         // Devolver el DTO con los totales
         return new DepositSummaryDto(amountInMonth, amountInYear);
     }
+
+    @Override
+    public AnnualDepositSummaryDto getAnnualDepositSummary(Long condominiumId, int year) {
+        // 1. Obtener breakdown mensual
+        List<Object[]> monthlyData = depositRepository.getMonthlyBreakdown(condominiumId, year);
+
+        // 2. Calcular totales anuales
+        double totalAmountYear = 0;
+        int totalDeposits = 0;
+        List<MonthlyDepositDto> monthlyBreakdown = new ArrayList<>();
+
+        for (Object[] data : monthlyData) {
+            int month = (int) data[0];
+            double amount = (double) data[2];
+            long deposits = (long) data[3];
+            long residents = (long) data[4];
+
+            totalAmountYear += amount;
+            totalDeposits += deposits;
+
+            monthlyBreakdown.add(MonthlyDepositDto.builder()
+                    .month(getSpanishMonthName(month))
+                    .amount(amount)
+                    .depositCount((int) deposits)
+                    .residentCount((int) residents)
+                    .build());
+        }
+
+        // 3. Obtener residentes únicos
+        int totalResidents = depositRepository.countUniqueResidents(condominiumId, year);
+
+        // 4. Obtener depósitos recientes
+        List<Deposit> recentDeposits = depositRepository.findRecentDeposits(
+                condominiumId,
+                year,
+               5
+        );
+
+        List<RecentDepositDto> recentDepositDtos = recentDeposits.stream()
+                .map(d -> RecentDepositDto.builder()
+                        .id(d.getId())
+                        .residentName(d.getResident().getUser().getFirstName() + " " + d.getResident().getUser().getLastName())
+                        .amount(d.getAmount())
+                        .date(d.getDepositDate().toLocalDate().toString())
+                        .build())
+                .collect(Collectors.toList());
+
+        return AnnualDepositSummaryDto.builder()
+                .totalAmountYear(totalAmountYear)
+                .totalDeposits(totalDeposits)
+                .totalResidents(totalResidents)
+                .monthlyBreakdown(monthlyBreakdown)
+                .recentDeposits(recentDepositDtos)
+                .build();
+    }
+
+    private String getSpanishMonthName(int month) {
+        return new String[]{"Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"}[month-1];
+    }
+
 }

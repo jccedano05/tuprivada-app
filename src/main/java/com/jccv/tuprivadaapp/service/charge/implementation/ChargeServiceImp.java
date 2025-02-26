@@ -1,5 +1,7 @@
 package com.jccv.tuprivadaapp.service.charge.implementation;
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
+import com.jccv.tuprivadaapp.dto.charge.AnnualChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
@@ -20,9 +22,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ChargeServiceImp implements ChargeService {
@@ -33,6 +39,7 @@ public class ChargeServiceImp implements ChargeService {
     private final PaymentService paymentService;
     private final ResidentService residentService;
     private final PaymentMapper paymentMapper;
+
 
     @Autowired
     public ChargeServiceImp(ChargeRepository chargeRepository, CondominiumService condominiumService, @Lazy PaymentService paymentService, ResidentService residentService, PaymentMapper paymentMapper) {
@@ -145,8 +152,12 @@ public Charge createCharge(ChargeDto chargeDto) {
             .condominium(condominiumService.findById(chargeDto.getCondominiumId()))
             .build();
 
-    return chargeRepository.save(charge);
+    Charge chargeSaved =  chargeRepository.save(charge);
 
+
+
+
+        return chargeSaved;
 
 
 }
@@ -202,6 +213,110 @@ public Charge createCharge(ChargeDto chargeDto) {
                 .forEach(payment -> {
                     residentService.updateBalanceResident(payment.getResidentId(), charge.getAmount());
                 }); ;
+    }
+
+    @Override
+    public AnnualChargeSummaryDto getAnnualChargeSummary(Long condominiumId, int year) {
+        LocalDateTime startDate = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(year, 12, 31, 23, 59);
+
+        List<Charge> charges = chargeRepository.findByCondominiumIdAndChargeDateBetweenAndIsActiveTrue(
+                condominiumId,
+                startDate,
+                endDate
+        );
+
+        AnnualChargeSummaryDto summary = new AnnualChargeSummaryDto();
+        summary.setTotalCharges(charges.size());
+
+        int fullyPaidCount = 0;
+        double totalCollected = 0;
+        double totalExpected = 0;
+        double remainingAmount = 0;
+        int totalPendingPayments = 0;
+        int totalPaidPayments = 0;
+
+
+        // Nuevas variables para el conteo
+        Map<Long, Integer> residentPendingCounts = new HashMap<>();
+        List<Long> allResidentsInYear = new ArrayList<>();
+
+        for (Charge charge : charges) {
+            int totalResidents = charge.getPayments().size();
+            int paidResidents = 0;
+
+            for (Payment payment : charge.getPayments()) {
+                // Registrar residentes con pagos pendientes
+                if (!payment.isPaid()) {
+                    totalPendingPayments++;
+                    residentPendingCounts.merge(payment.getResident().getId(), 1, Integer::sum);
+                } else {
+                    paidResidents++;
+                    totalPaidPayments++; // Contar pagos exitosos
+                }
+
+                // Registrar todos los residentes únicos del año
+                Long residentId = payment.getResident().getId();
+                if (!allResidentsInYear.contains(residentId)) {
+                    allResidentsInYear.add(residentId);
+                }
+            }
+
+            double chargeTotal = charge.getAmount() * totalResidents;
+            double chargeCollected = charge.getAmount() * paidResidents;
+
+            totalExpected += chargeTotal;
+            totalCollected += chargeCollected;
+            remainingAmount += (chargeTotal - chargeCollected);
+
+            if (paidResidents == totalResidents) {
+                fullyPaidCount++;
+            }
+        }
+
+        // Categorizar residentes pendientes
+        int count1 = 0, count2 = 0, count3 = 0, count4 = 0, count5Plus = 0;
+        for (Map.Entry<Long, Integer> entry : residentPendingCounts.entrySet()) {
+            int pendingCount = entry.getValue();
+            if (pendingCount >= 5) {
+                count5Plus++;
+            } else {
+                switch (pendingCount) {
+                    case 1: count1++; break;
+                    case 2: count2++; break;
+                    case 3: count3++; break;
+                    case 4: count4++; break;
+                }
+            }
+        }
+
+        // Calcular residentes únicos con al menos 1 pendiente
+        int uniqueResidentsWithPending = residentPendingCounts.size();
+
+        // Setear valores en el DTO
+        summary.setTotalPaidPayments(totalPaidPayments);
+        summary.setTotalPendingPayments(totalPendingPayments);
+        summary.setFullyPaidCharges(fullyPaidCount);
+        summary.setTotalCollected(totalCollected);
+        summary.setRemainingAmount(remainingAmount);
+        summary.setResidentsWithPending(uniqueResidentsWithPending);
+
+        summary.setResidentsWith1Pending(count1);
+        summary.setResidentsWith2Pending(count2);
+        summary.setResidentsWith3Pending(count3);
+        summary.setResidentsWith4Pending(count4);
+        summary.setResidentsWith5PlusPending(count5Plus);
+
+        // Calcular tasa de conversión
+        if (totalExpected > 0) {
+            double conversionRate = (totalCollected / totalExpected) * 100;
+            BigDecimal bd = BigDecimal.valueOf(conversionRate);
+            summary.setSuccessConversionRate(bd.setScale(2, RoundingMode.HALF_UP).doubleValue());
+        } else {
+            summary.setSuccessConversionRate(0);
+        }
+
+        return summary;
     }
 }
 

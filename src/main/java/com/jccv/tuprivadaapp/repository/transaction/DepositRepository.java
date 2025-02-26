@@ -36,4 +36,40 @@ public interface DepositRepository extends JpaRepository<Deposit, Long> {
     @Query("SELECT d FROM Deposit d WHERE d.resident.condominium.id = :condominiumId AND YEAR(d.depositDate) = :year")
     List<Deposit> findByCondominiumIdAndYear(@Param("condominiumId") Long condominiumId,
                                              @Param("year") int year);
+
+
+    // Consulta para el breakdown mensual
+    @Query("SELECT MONTH(d.depositDate) as month, YEAR(d.depositDate) as year, " +
+            "SUM(d.amount) as totalAmount, COUNT(d) as depositCount, " +
+            "COUNT(DISTINCT d.resident) as residentCount " +
+            "FROM Deposit d " +
+            "WHERE d.resident.condominium.id = :condominiumId AND YEAR(d.depositDate) = :year " +
+            "GROUP BY MONTH(d.depositDate), YEAR(d.depositDate)")
+    List<Object[]> getMonthlyBreakdown(@Param("condominiumId") Long condominiumId,
+                                       @Param("year") int year);
+
+    // Consulta para residentes únicos
+    @Query("SELECT COUNT(DISTINCT d.resident) " +
+            "FROM Deposit d " +
+            "WHERE d.resident.condominium.id = :condominiumId AND YEAR(d.depositDate) = :year")
+    int countUniqueResidents(@Param("condominiumId") Long condominiumId,
+                             @Param("year") int year);
+
+    // En DepositRepository.java
+    @Query(value = """
+    SELECT d.* 
+    FROM deposits d
+    JOIN residents r ON d.resident_id = r.id
+    JOIN users u ON r.user_id = u.id
+    WHERE r.condominium_id = :condominiumId 
+    AND EXTRACT(YEAR FROM d.deposit_date) = :year
+    ORDER BY d.deposit_date DESC
+    LIMIT :limit
+    """,
+            nativeQuery = true)
+    List<Deposit> findRecentDeposits(
+            @Param("condominiumId") Long condominiumId,
+            @Param("year") int year,
+            @Param("limit") int limit
+    );
 }

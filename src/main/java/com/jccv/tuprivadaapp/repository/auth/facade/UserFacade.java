@@ -44,8 +44,20 @@ public class UserFacade {
     public User findById(Long userId) {
         return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException(MESSAGE_USER_EXCEPTION));
     }
+
+    public User findByEmail(String email){
+        return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Email no encontrado"));
+    }
+
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Usuario y/o Contraseña incorrecta"));
+    }
+
+    public List<User> findUsersResidentByCondominiumId(Long condominiumId) {
+        return userRepository.findResidentsByCondominiumId(condominiumId);
+    }
+    public List<User> findUsersByUserIds(List<Long> userIds) {
+        return userRepository.findAllByUserIds(userIds);
     }
 
     //Buscar por nombre de usuario

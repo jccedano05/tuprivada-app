@@ -16,4 +16,11 @@ public interface ChargeRepository extends JpaRepository<Charge, Long> {
 
     // Solo traerá los cargos activos dentro del rango de fechas
     List<Charge> findByCondominiumIdAndChargeDateBetweenAndIsActiveTrueOrderByChargeDateDesc(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate);
+
+    List<Charge> findByCondominiumIdAndChargeDateBetweenAndIsActiveTrue(
+            Long condominiumId,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
+
 }

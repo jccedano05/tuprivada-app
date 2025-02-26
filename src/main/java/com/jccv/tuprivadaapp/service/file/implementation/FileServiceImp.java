@@ -1,12 +1,17 @@
 package com.jccv.tuprivadaapp.service.file.implementation;
 
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.file.FileDto;
 import com.jccv.tuprivadaapp.dto.file.mapper.FileMapper;
+import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.file.File;
 import com.jccv.tuprivadaapp.repository.condominium.CondominiumRepository;
 import com.jccv.tuprivadaapp.repository.file.FileRepository;
 import com.jccv.tuprivadaapp.service.file.FileService;
+import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,11 +26,16 @@ public class FileServiceImp implements FileService {
     private final FileRepository fileRepository;
     private final FileMapper fileMapper;
     private final CondominiumRepository condominiumRepository;
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
+    private final PollingNotificationService pollingNotificationService;
 
-    public FileServiceImp(FileRepository fileRepository, FileMapper fileMapper, CondominiumRepository condominiumRepository) {
+    @Autowired
+    public FileServiceImp(FileRepository fileRepository, FileMapper fileMapper, CondominiumRepository condominiumRepository, OneSignalPushNotificationService oneSignalPushNotificationService, PollingNotificationService pollingNotificationService) {
         this.fileRepository = fileRepository;
         this.fileMapper = fileMapper;
         this.condominiumRepository = condominiumRepository;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
+        this.pollingNotificationService = pollingNotificationService;
     }
 
     @Override
@@ -36,6 +46,18 @@ public class FileServiceImp implements FileService {
 
         File file = fileMapper.toEntity(fileDto);
         File savedFile = fileRepository.save(file);
+
+        pollingNotificationService.createNotificationForCondominium(fileDto.getCondominiumId(), PollingNotificationDto.builder()
+                .title("Documento '" + fileDto.getFileName() + "' agregado a tu comunidad")
+                .message("Descripcion: '" + fileDto.getDescription())
+                .read(false)
+                .build());
+
+        oneSignalPushNotificationService.sendPushToCondominium(fileDto.getCondominiumId(), PushNotificationRequest.builder()
+                .title("Documento agregado a tu comunidad")
+                .message(fileDto.getFileName())
+                .build());
+
         return fileMapper.toDTO(savedFile);
     }
 

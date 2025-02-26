@@ -12,7 +12,7 @@ public interface FinanceService {
     FinanceDto createFinance(FinanceDto financeDto);
     FinanceDto getFinanceById(Long id);
     Page<FinanceDto> getFinancesByCondominium(Long condominiumId, int page, int size);
-
+    FinanceSummaryDto getLatestFinanceByCondominiumId(Long condominiumId);
     public List<FinanceSummaryDto> getFinancesCondominiumByYear(Long condominiumId, int year);
     List<AnnualFinanceDto> getAnnualFinances(Long condominiumId);
     FinanceDto updateFinance(Long id, FinanceDto financeDto);

@@ -47,6 +47,10 @@ public class User implements UserDetails {
     @NotBlank(message = "La contraseña no puede estar vacía")
     private String password;
 
+    @Column(name = "email", unique = true)
+    @NotBlank(message = "El email no puede estar vacío")
+    private String email;
+
     @Enumerated(value = EnumType.STRING)
     @Valid()
     private Role role;

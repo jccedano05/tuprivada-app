@@ -288,6 +288,16 @@ public class AuthenticationService {
         return userMapper.convertUserToUserDto(userFacade.save(user));
     }
 
+    public String generateResetCodePassword(String email){
+
+        User user = userFacade.findByEmail(email);
+
+        //Generar codigo aleatorio de 6 digitos
+
+        //Guardar en la base de datos y dar 30 min de vida a ese codigo
+        return "Codigo de 6 digitos";
+    }
+
 
 //    private void verifyAuthorityToUpdate(User userToUpdate){
 //        if (SecurityContextHolder.getContext().getAuthentication() != null) {

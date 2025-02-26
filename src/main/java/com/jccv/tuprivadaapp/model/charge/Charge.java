@@ -17,7 +17,9 @@ import java.util.List;
 @ToString
 @Builder
 @Entity
-@Table(name = "charges")
+@Table(name = "charges", indexes = {
+        @Index(name = "idx_charge_date", columnList = "charge_date")
+})
 public class Charge {
 
     @Id

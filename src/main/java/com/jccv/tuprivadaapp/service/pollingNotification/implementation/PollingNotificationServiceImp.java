@@ -2,9 +2,7 @@ package com.jccv.tuprivadaapp.service.pollingNotification.implementation;
 
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.dto.pollingNotification.mapper.PollingNotificationMapper;
-import com.jccv.tuprivadaapp.model.Role;
 import com.jccv.tuprivadaapp.model.User;
-import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.model.pollingNotification.PollingNotification;
 import com.jccv.tuprivadaapp.repository.auth.facade.UserFacade;
 import com.jccv.tuprivadaapp.repository.pollingNotification.PollingNotificationRepository;
@@ -14,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PollingNotificationServiceImp implements PollingNotificationService {
@@ -23,14 +21,12 @@ public class PollingNotificationServiceImp implements PollingNotificationService
     private final PollingNotificationMapper pollingNotificationMapper;
 
     private final UserFacade userFacade;
-    private final CondominiumService condominiumService;
     private final PollingNotificationRepository notificationRepository;
 
     @Autowired
     public PollingNotificationServiceImp(PollingNotificationMapper pollingNotificationMapper, UserFacade userFacade, CondominiumService condominiumService, PollingNotificationRepository notificationRepository) {
         this.pollingNotificationMapper = pollingNotificationMapper;
         this.userFacade = userFacade;
-        this.condominiumService = condominiumService;
         this.notificationRepository = notificationRepository;
     }
 
@@ -63,15 +59,47 @@ public class PollingNotificationServiceImp implements PollingNotificationService
     @Override
     public void createNotificationForCondominium(Long condominiumId, PollingNotificationDto pollingNotificationDto) {
 
-        Condominium condominium = condominiumService.findById(condominiumId);
+        List<User> users = userFacade.findUsersResidentByCondominiumId(condominiumId);
 
-        List<User> residents = condominium.getUsers().stream()
-                .filter(user -> user.getRole().equals(Role.RESIDENT))
-                .toList();
+        savePollingNotificationsByUserList(pollingNotificationDto, users);
 
-        for (User resident : residents) {
-            createNotification(pollingNotificationDto.getTitle(), pollingNotificationDto.getMessage(), resident);
+
+//        for (User resident : residents) {
+//            createNotification(pollingNotificationDto.getTitle(), pollingNotificationDto.getMessage(), resident);
+//        }
+    }
+
+    @Override
+    public void createNotificationForByUserIds(List<Long> userIds, PollingNotificationDto pollingNotificationDto) {
+
+        List<User> users = userFacade.findUsersByUserIds(userIds);
+
+        savePollingNotificationsByUserList(pollingNotificationDto, users);
+    }
+
+    @Override
+    public void createNotificationForUserList(List<User> users, PollingNotificationDto pollingNotificationDto) {
+
+
+        savePollingNotificationsByUserList(pollingNotificationDto, users);
+    }
+
+    private void savePollingNotificationsByUserList(PollingNotificationDto pollingNotificationDto, List<User> users){
+
+        // Crear una lista de notificaciones para guardar en lote
+        List<PollingNotification> notifications = new ArrayList<>();
+
+        for (User user : users) {
+            PollingNotification notification =  PollingNotification.builder()
+                    .title(pollingNotificationDto.getTitle())
+                    .message(pollingNotificationDto.getMessage())
+                    .user(user)
+                    .build();
+            notifications.add(notification);
         }
+
+        // Guardar todas las notificaciones en una sola operación (en lote)
+        notificationRepository.saveAll(notifications);
     }
 
     @Override

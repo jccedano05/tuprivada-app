@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.controller.transaction;
 
+import com.jccv.tuprivadaapp.dto.transaction.AnnualDepositSummaryDto;
 import com.jccv.tuprivadaapp.dto.transaction.DepositDto;
 import com.jccv.tuprivadaapp.dto.transaction.DepositSummaryDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
@@ -155,6 +156,29 @@ BadRequestException e) {
             @RequestParam int year) {
         DepositSummaryDto summary = depositService.getDepositSummaryForMonthAndYear(condominiumId, month, year);
         return ResponseEntity.ok(summary);
+    }
+
+    // DepositController.java
+    @GetMapping("/condominiums/{condominiumId}/annual-summary")
+    public ResponseEntity<?> getAnnualDepositSummary(
+            @PathVariable Long condominiumId,
+            @RequestParam int year) {
+
+        try {
+
+            System.out.println("Entro al summary");
+            AnnualDepositSummaryDto summary = depositService.getAnnualDepositSummary(condominiumId, year);
+            return new ResponseEntity<>(summary, HttpStatus.OK);
+
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+
+        } catch (BadRequestException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

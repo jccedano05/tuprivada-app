@@ -1,14 +1,19 @@
 package com.jccv.tuprivadaapp.service.contact.implementation;
+import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.contact.ContactDto;
 import com.jccv.tuprivadaapp.dto.contact.mapper.ContactMapper;
+import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
+import com.jccv.tuprivadaapp.model.Role;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.model.contact.Contact;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.contact.ContactRepository;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
 import com.jccv.tuprivadaapp.service.contact.ContactService;
+import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
+import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,12 +26,16 @@ public class ContactServiceImp implements ContactService {
     private final ContactRepository contactRepository;
     private final ContactMapper contactMapper;
     private final CondominiumService condominiumService;
+    private final PollingNotificationService pollingNotificationService;
+    private final OneSignalPushNotificationService oneSignalPushNotificationService;
 
     @Autowired
-    public ContactServiceImp(ContactRepository contactRepository, ContactMapper contactMapper, CondominiumService condominiumService) {
+    public ContactServiceImp(ContactRepository contactRepository, ContactMapper contactMapper, CondominiumService condominiumService, PollingNotificationService pollingNotificationService, OneSignalPushNotificationService oneSignalPushNotificationService) {
         this.contactRepository = contactRepository;
         this.contactMapper = contactMapper;
         this.condominiumService = condominiumService;
+        this.pollingNotificationService = pollingNotificationService;
+        this.oneSignalPushNotificationService = oneSignalPushNotificationService;
     }
 
     @Override
@@ -74,6 +83,18 @@ public class ContactServiceImp implements ContactService {
             contact.setCondominium(condominium);
         }
 
+        if(contact.getResident() != null && contact.getResident().getUser() != null && contact.getResident().getUser().getRole().equals(Role.ADMIN)){
+            pollingNotificationService.createNotificationForCondominium(contact.getCondominium().getId(), PollingNotificationDto.builder()
+                    .title("Contacto '" + contact.getName() + "' agregado a tu comunidad")
+                    .message("Ahora el numero telefonico de este contacto esta disponible para verlo en la seccion de Contactos")
+                    .read(false)
+                    .build());
+
+            oneSignalPushNotificationService.sendPushToCondominium(contact.getCondominium().getId(), PushNotificationRequest.builder()
+                    .title("Nuevo contacto en tu comunidad")
+                    .message("Ahora puedes ver a '" + contact.getName() + "' en la seccion de Contactos")
+                    .build());
+        }
 
         return contactMapper.toDTO(contactRepository.save(contact));
     }
