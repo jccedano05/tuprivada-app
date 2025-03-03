@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Bienvenido</title>
+    <style>
+        .header { background: #f0f2f5; padding: 20px; }
+        .button { background: #2563eb; color: white; padding: 10px 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1 th:text="'¡Hola, ' + ${nombre} + '!'"></h1>
+</div>
+<div class="content">
+    <p>Gracias por unirte a nuestra plataforma.</p>
+    <a th:href="${activationLink}" class="button">Activar cuenta</a>
+</div>
+</body>
+</html>
