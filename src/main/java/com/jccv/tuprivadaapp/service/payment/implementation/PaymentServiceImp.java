@@ -11,7 +11,6 @@ import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
-import com.jccv.tuprivadaapp.model.payment.PenaltyTypeEnum;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
 import com.jccv.tuprivadaapp.service.accountBank.AccountBankService;
@@ -21,24 +20,16 @@ import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationServ
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 
 import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import shaded_package.org.apache.commons.collections.map.SingletonMap;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service

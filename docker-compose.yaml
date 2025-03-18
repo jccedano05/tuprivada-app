@@ -40,6 +40,10 @@ services:
       ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID}
       ONESIGNAL_API_KEY: ${ONESIGNAL_API_KEY}
       ONESIGNAL_ANDROID_CHANNEL_ID: ${ONESIGNAL_ANDROID_CHANNEL_ID}
+      spring_thymeleaf_prefix: ${spring_thymeleaf_prefix}
+      spring_thymeleaf_suffix: ${spring_thymeleaf_suffix}
+      spring_thymeleaf_mode: ${spring_thymeleaf_mode}
+      email_sender: ${email_sender}
 
 volumes:
   postgres_data:
