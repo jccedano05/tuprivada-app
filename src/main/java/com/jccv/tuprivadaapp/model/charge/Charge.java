@@ -26,14 +26,14 @@ public class Charge {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String titleTypePayment;  // Ej. "Mantenimiento Junio", "Mantenimiento Julio"
+    private String titleTypePayment;
 
-    private LocalDateTime chargeDate;  // Fecha del cargo
+    private LocalDateTime chargeDate;
 
-    private boolean isActive = true;  // Indica si el cargo está activo o no
+    private boolean isActive = true;
 
-    private double amount;           // Monto del cargo
-    private String description;      // Descripción del cargo
+    private double amount;
+    private String description;
     private PenaltyTypeEnum penaltyType;
     private Double penaltyValue;
     private LocalDateTime dueDate;
@@ -41,12 +41,12 @@ public class Charge {
     @OneToMany(mappedBy = "charge", cascade = CascadeType.ALL)
     @JsonManagedReference
     @ToString.Exclude
-    private List<Payment> payments;  // Lista de pagos asociados a este cargo
+    private List<Payment> payments;
 
     @ManyToOne
     @JoinColumn(name = "condominium_id", nullable = false)
     @JsonBackReference
     @ToString.Exclude
-    private Condominium condominium;  // Referencia al condominio
+    private Condominium condominium;
 
 }

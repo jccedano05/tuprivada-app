@@ -136,7 +136,6 @@ public class AuthenticationService {
         if (user == null) {
             throw new ResourceNotFoundException("Usuario no encontrado");
         }
-        System.out.println("New password: " + newPassword);
 
         user.setPassword(passwordEncoder.encode(newPassword));
         System.out.println("password enconde: " + user.getPassword());

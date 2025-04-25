@@ -1,10 +1,7 @@
 package com.jccv.tuprivadaapp.controller.payment;
 
 
-import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
-import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
-import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
-import com.jccv.tuprivadaapp.dto.payment.PaymentSummaryDto;
+import com.jccv.tuprivadaapp.dto.payment.*;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.payment.Payment;
@@ -97,10 +94,13 @@ public class PaymentController {
     public ResponseEntity<?> getPaymentsByChargeId(@PathVariable Long chargeId) {
         try {
             List<PaymentResidentDetailsDto> payments = paymentService.getAllPaymentsByChargeId(chargeId);
+            System.out.println("Charge exitoso");
             return ResponseEntity.ok(payments);
         } catch (ResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -141,6 +141,17 @@ public class PaymentController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<PaymentDetailsDto> paidPayments = paymentService.getPaidPaymentsForResident(residentId, page, size);
+        return ResponseEntity.ok(paidPayments);
+    }
+
+    @PreAuthorize(USER_LEVEL)
+    @GetMapping("/resident/{residentId}/paid-with-deposits")
+    public ResponseEntity<Page<?>> getPaidPaymentsWithDeposits(
+            @PathVariable Long residentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+//        Page<PaymentDetailsDto> paidPayments = paymentService.getPaidPaymentsForResident(residentId, page, size);
+        Page<TransactionDto> paidPayments = paymentService.getResidentTransactions(residentId, page, size);
         return ResponseEntity.ok(paidPayments);
     }
 

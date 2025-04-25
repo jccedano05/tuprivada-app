@@ -1,12 +1,14 @@
 package com.jccv.tuprivadaapp.model.payment;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +28,12 @@ public class Payment {
     @Column(name = "is_paid")
     private boolean isPaid = false;
 
+
+    @Column(name = "date_paid")
+    private LocalDateTime datePaid = null;
+
+
+
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
@@ -43,4 +51,9 @@ public class Payment {
     @JsonBackReference
     @ToString.Exclude
     private Charge charge;
+
+    @OneToMany(mappedBy = "payment")
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<DepositPayment> depositPayments;
 }

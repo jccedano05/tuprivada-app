@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface ResidentService {
 
     public Optional<Resident> getResidentById(Long id);
+    ResidentRelevantInfoDto getResidentDtoById(Long residentId);
+
     public List<Resident> findAllById(List<Long> ids);
     ResidentDto getResidentByUserId(Long userId);
     public Optional<List<Contact>> getAllContactsByResidentId(Long id);
@@ -26,4 +28,6 @@ public interface ResidentService {
 
     public void updateBalanceResident(Long residentId, Double amountToInclude);
     public void updateBalanceResident(Resident resident, Double amountToInclude);
+
+    Double getBalanceOfResidentById(Long id);
 }

@@ -127,10 +127,10 @@ public class ChargeController {
     }
 
     @DeleteMapping("/{chargeId}")
-    public ResponseEntity<String> logicalDeleteCharge(@PathVariable Long chargeId) {
+    public ResponseEntity<String> deleteCharge(@PathVariable Long chargeId) {
         try {
             // Llamar al servicio para eliminar el cargo de manera lógica
-            chargeService.logicalDeleteCharge(chargeId);
+            chargeService.deleteChargeById(chargeId);
             return ResponseEntity.ok("El cargo y sus pagos asociados fueron eliminados lógicamente.");
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

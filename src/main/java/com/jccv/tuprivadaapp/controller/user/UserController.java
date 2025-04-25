@@ -26,9 +26,6 @@ public class UserController {
             @PathVariable Long userId,
             @Valid @RequestBody UserDataToShowDto userDataToShowDto) {
 
-
-        System.out.println("Backend user");
-        System.out.println(userDataToShowDto.toString());
         try {
             User updatedUser = userService.updateUser(userId, userDataToShowDto);
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);

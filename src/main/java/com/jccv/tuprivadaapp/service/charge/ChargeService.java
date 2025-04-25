@@ -26,6 +26,8 @@ public interface ChargeService {
     // En ChargeService.java
     AnnualChargeSummaryDto getAnnualChargeSummary(Long condominiumId, int year);
 
+    void deleteChargeById(Long ChargeId);
+
 
     @Transactional
     void logicalDeleteCharge(Long chargeId);

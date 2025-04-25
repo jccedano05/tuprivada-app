@@ -20,4 +20,5 @@ public class PaymentDetailsDto {
     private boolean isActive;     // Indica si el cargo está activo
     private LocalDateTime dueDate; // Fecha de vencimiento
     private Double penaltyValue; // Valor del recargo, si aplica
+    private LocalDateTime datePaid;
 }

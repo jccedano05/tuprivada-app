@@ -19,6 +19,7 @@ public class PaymentMapper {
 //                .typePayment(payment.getTypePayment())
 //                .description(payment.getDescription())
                 .isPaid(payment.isPaid())
+                .datePaid(payment.getDatePaid())
                 .residentId(payment.getResident().getId()) // Asumiendo que quieres el ID del residente
                 .build();
     }
@@ -32,6 +33,7 @@ public class PaymentMapper {
 //                .typePayment(payment.getTypePayment())
 //                .description(payment.getDescription())
                 .isPaid(payment.isPaid())
+                .datePaid(payment.getDatePaid())
                 .residentId(payment.getResidentId()) // Asumiendo que quieres el ID del residente
                 .build();
     }
@@ -46,6 +48,7 @@ public class PaymentMapper {
 //                .typePayment(paymentDTO.getTypePayment())
 //                .description(paymentDTO.getDescription())
                 .isPaid(paymentDTO.isPaid())
+                .datePaid(paymentDTO.getDatePaid())
                 .resident(resident) // Necesitas pasar el residente
                 .build();
     }

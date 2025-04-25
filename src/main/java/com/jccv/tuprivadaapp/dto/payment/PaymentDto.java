@@ -18,5 +18,6 @@ public class PaymentDto {
     private String typePayment;
     private String description;
     private boolean isPaid;
+    private LocalDateTime datePaid;
     private Long residentId;
 }

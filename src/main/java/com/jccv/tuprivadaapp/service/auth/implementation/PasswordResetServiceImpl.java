@@ -39,10 +39,10 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     public String generateResetToken() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        String characters = "0123456789";
         SecureRandom random = new SecureRandom();
         StringBuilder token = new StringBuilder();
-        int tokenLength = 10; // Puedes cambiar la longitud del token según lo necesites
+        int tokenLength = 6; // Puedes cambiar la longitud del token según lo necesites
 
         for (int i = 0; i < tokenLength; i++) {
             int index = random.nextInt(characters.length());

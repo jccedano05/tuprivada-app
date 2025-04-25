@@ -1,10 +1,9 @@
 package com.jccv.tuprivadaapp.model;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
-import com.jccv.tuprivadaapp.model.resident.Resident;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -55,8 +54,13 @@ public class User implements UserDetails {
     @Valid()
     private Role role;
 
-
     private String bankPersonalReference;
+
+    @Column(name = "phone")
+    private String phone;  // Campo para el número de teléfono
+
+    @Column(name = "country_code")
+    private String countryCode;  // Campo para el código de país (como +52)
 
     @JsonIgnore
     @ToString.Exclude

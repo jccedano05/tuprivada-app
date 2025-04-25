@@ -17,6 +17,9 @@ import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -38,38 +41,20 @@ public class ChargeServiceImp implements ChargeService {
     private final CondominiumService condominiumService;
     private final PaymentService paymentService;
     private final ResidentService residentService;
-    private final PaymentMapper paymentMapper;
+
+    @PersistenceContext
+    private EntityManager em;
 
 
     @Autowired
-    public ChargeServiceImp(ChargeRepository chargeRepository, CondominiumService condominiumService, @Lazy PaymentService paymentService, ResidentService residentService, PaymentMapper paymentMapper) {
+    public ChargeServiceImp(ChargeRepository chargeRepository, CondominiumService condominiumService, @Lazy PaymentService paymentService, ResidentService residentService) {
         this.chargeRepository = chargeRepository;
         this.condominiumService = condominiumService;
 
         this.paymentService = paymentService;
         this.residentService = residentService;
-        this.paymentMapper = paymentMapper;
     }
 
-//    public Charge createCharge(ChargeDto chargeDto, List<Payment> payments) {
-//        Charge charge = Charge.builder()
-//                .titleTypePayment(chargeDto.getTitleTypePayment())
-//                .chargeDate(chargeDto.getChargeDate())
-//                .dueDate(chargeDto.getDueDate())
-//                .payments(payments)
-//                .isActive(true)
-//                .description(chargeDto.getDescription())
-//                .penaltyType(chargeDto.getPenaltyType())
-//                .penaltyValue(chargeDto.getPenaltyValue())
-//                .amount(chargeDto.getAmount())
-//                .condominium(condominiumService.findById(chargeDto.getCondominiumId()))
-//                .build();
-//
-//        // Asocia cada pago al cargo
-//        payments.forEach(payment -> payment.setCharge(charge));
-//
-//        return chargeRepository.save(charge);
-//    }
 
     @Override
     public Charge findById(Long chargeId) {
@@ -317,6 +302,47 @@ public Charge createCharge(ChargeDto chargeDto) {
         }
 
         return summary;
+    }
+
+
+    @Override
+    @Transactional
+    public void deleteChargeById(Long chargeId) {
+        // Actualizar el balance para los residentes con payments pagados.
+        // Se suma el amount del charge a cada residente que tenga algún payment pagado.
+        Query queryPaid = em.createNativeQuery(
+                "UPDATE residents r " +
+                        "SET balance = balance + (SELECT c.amount FROM charges c WHERE c.id = :chargeId) " +
+                        "WHERE r.id IN (" +
+                        "  SELECT DISTINCT p.resident_id FROM payments p " +
+                        "  WHERE p.charge_id = :chargeId AND p.is_paid = true" +
+                        ")"
+        );
+        queryPaid.setParameter("chargeId", chargeId);
+        queryPaid.executeUpdate();
+
+        // Actualizar el balance para los residentes con payments no pagados que tienen deposit payments.
+        // Se suma la suma de todos los deposit payments asociados a cada payment.
+        Query queryNotPaid = em.createNativeQuery(
+                "UPDATE residents r " +
+                        "SET balance = balance + COALESCE((" +
+                        "  SELECT SUM(dp.amount) FROM deposit_payments dp " +
+                        "  INNER JOIN payments p ON dp.payment_id = p.id " +
+                        "  WHERE p.charge_id = :chargeId AND p.is_paid = false AND p.resident_id = r.id" +
+                        "), 0) " +
+                        "WHERE r.id IN (" +
+                        "  SELECT DISTINCT p.resident_id FROM payments p " +
+                        "  WHERE p.charge_id = :chargeId AND p.is_paid = false" +
+                        ")"
+        );
+        queryNotPaid.setParameter("chargeId", chargeId);
+        queryNotPaid.executeUpdate();
+
+        // Eliminar todos los payments asociados al charge
+        paymentService.deleteAllPaymentsWithChargeId(chargeId);
+
+        // Finalmente, eliminar el charge
+        chargeRepository.deleteById(chargeId);
     }
 }
 

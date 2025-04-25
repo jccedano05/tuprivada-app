@@ -56,6 +56,14 @@ public class ResidentServiceImp implements ResidentService {
     }
 
     @Override
+    public ResidentRelevantInfoDto getResidentDtoById(Long residentId) {
+        Resident resident = residentRepository.findById(residentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resident not found with id: " + residentId));
+        return residentMapper.modelToResidentInfoDto(resident);
+    }
+
+
+    @Override
     public Resident updateResident(Long id, Resident resident) {
         return null;
     }
@@ -86,5 +94,11 @@ public class ResidentServiceImp implements ResidentService {
     public void updateBalanceResident(Resident resident, Double amountToInclude){
         resident.setBalance(resident.getBalance() + amountToInclude);
         saveResident(resident);
+    }
+
+    @Override
+    public Double getBalanceOfResidentById(Long id) {
+        Resident resident = residentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Resident not found with id: " + id));
+        return resident.getBalance();
     }
 }
