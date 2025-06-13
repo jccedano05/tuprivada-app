@@ -24,6 +24,8 @@ public interface DepositPaymentRepository extends JpaRepository<DepositPayment, 
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
+    @Query("SELECT dp FROM DepositPayment dp JOIN dp.payment p WHERE p.resident.id = :residentId")
+    List<DepositPayment> findAllByResidentId(@Param("residentId") Long residentId);
 
 
 

@@ -1,13 +1,10 @@
 package com.jccv.tuprivadaapp.service.charge.implementation;
 
-import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
 import com.jccv.tuprivadaapp.dto.charge.AnnualChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
-import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
-import com.jccv.tuprivadaapp.dto.payment.mapper.PaymentMapper;
-import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
+import com.jccv.tuprivadaapp.dto.resident.ResidentChargeSummaryDto;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
@@ -303,6 +300,9 @@ public Charge createCharge(ChargeDto chargeDto) {
 
         return summary;
     }
+
+
+
 
 
     @Override

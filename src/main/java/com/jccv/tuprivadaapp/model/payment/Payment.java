@@ -56,4 +56,9 @@ public class Payment {
     @JsonManagedReference
     @ToString.Exclude
     private List<DepositPayment> depositPayments;
+
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<StripePaymentIntent> stripePaymentIntents;
 }

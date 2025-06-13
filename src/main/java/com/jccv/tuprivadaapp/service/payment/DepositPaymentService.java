@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.service.payment;
 
 import com.jccv.tuprivadaapp.dto.payment.DepositPaymentDto;
+import com.jccv.tuprivadaapp.model.receipt.Receipt;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,9 @@ public interface DepositPaymentService {
     List<DepositPaymentDto> getDepositsByPayment(Long paymentId);
 
     Double getTotalDepositsAmountByPaymentId(Long paymentId);
+
+    public List<DepositPaymentDto> getDepositsByResidentId(Long residentId);
+
     List<DepositPaymentDto> getDepositsByResidentAndDateRange(Long residentId, LocalDateTime startDate, LocalDateTime endDate);
 
     @Transactional
@@ -25,4 +29,6 @@ public interface DepositPaymentService {
 
     @Transactional
     void deleteAllDepositsWithBalanceUpdateByPaymentId(Long paymentId, Resident resident);
+
+    Receipt generateDepositPaymentReceiptData(Long id);
 }

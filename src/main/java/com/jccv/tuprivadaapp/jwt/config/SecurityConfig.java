@@ -42,7 +42,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
-                        req -> req.requestMatchers("/auth/**",  "/api/v1/app-version" )
+                        req -> req.requestMatchers("/auth/**",  "/api/v1/app-version", "/stripe-webhooks/**" )
                                 .permitAll()
                                 .requestMatchers("/admin_only/**").hasAuthority("ADMIN")
 //                                .requestMatchers("/admin_only/**").hasAuthority("ADMIN")

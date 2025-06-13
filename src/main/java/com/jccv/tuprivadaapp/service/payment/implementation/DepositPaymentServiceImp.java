@@ -7,6 +7,7 @@ import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.DepositPayment;
 import com.jccv.tuprivadaapp.model.payment.Payment;
+import com.jccv.tuprivadaapp.model.receipt.Receipt;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.payment.DepositPaymentRepository;
 import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
@@ -137,6 +138,18 @@ public class DepositPaymentServiceImp implements DepositPaymentService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<DepositPaymentDto> getDepositsByResidentId(Long residentId) {
+
+        List<DepositPayment> deposits = depositPaymentRepository.findAllByResidentId(residentId);
+
+        deposits.forEach(System.out::println);
+        return deposits.stream()
+                .map(depositPaymentMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     @Override
     public DepositPaymentDto updateDeposit(Long depositId, DepositPaymentDto updatedDto) {
@@ -208,6 +221,27 @@ public class DepositPaymentServiceImp implements DepositPaymentService {
         residentService.updateBalanceResident(resident, depositsTotalAmount);
         depositPaymentRepository.deleteAllById(deposits.stream().map(DepositPaymentDto::getId).toList());
 
+    }
+
+    @Override
+    public Receipt generateDepositPaymentReceiptData(Long id) {
+        DepositPayment payment = depositPaymentRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("Deposit Payment no encontrado con el id: " + id));
+
+        String residentAddress = payment.getPayment().getResident().getAddressResident().getStreet().concat(" #").concat(payment.getPayment().getResident().getAddressResident().getExtNumber());
+        String residentName = payment.getPayment().getResident().getUser().getFirstName().concat(" ").concat(payment.getPayment().getResident().getUser().getLastName());
+
+        return  Receipt.builder()
+                .depositPayment(payment)
+                .receiptName("Abono a cargo")
+                .createdAt(LocalDateTime.now())
+                .condominium(payment.getPayment().getCharge().getCondominium())
+                .amount(payment.getAmount())
+                .residentAddress(residentAddress)
+                .residentName(residentName)
+                .datePaid(payment.getDepositDate())
+                .title("Abono - ".concat(payment.getPayment().getCharge().getTitleTypePayment()))
+                .description("Abono - ".concat(payment.getPayment().getCharge().getDescription()))
+                .build();
     }
 
 

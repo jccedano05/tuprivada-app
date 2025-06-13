@@ -103,6 +103,52 @@
 			<version>2.20.0</version>
 		</dependency>
 
+<!--		<dependency>-->
+<!--			<groupId>com.stripe</groupId>-->
+<!--			<artifactId>stripe-java</artifactId>-->
+<!--			<version>29.0.0</version>-->
+<!--		</dependency>-->
+		<!-- https://mvnrepository.com/artifact/com.stripe/stripe-java -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>28.4.0</version>
+		</dependency>
+
+		<!-- Biblioteca principal de ZXing para codificación/decodificación de códigos de barras -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+
+		<!-- Extensiones específicas para Java SE, necesarias para trabajar con imágenes -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+
+		<!-- Núcleo de iText -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>kernel</artifactId>
+			<version>9.2.0</version>
+		</dependency>
+
+		<!-- Módulo de diseño para crear documentos PDF -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>layout</artifactId>
+			<version>9.2.0</version>
+		</dependency>
+
+		<!-- Módulo de entrada/salida -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>io</artifactId>
+			<version>9.2.0</version>
+		</dependency>
 
 
 		<dependency>

@@ -8,6 +8,7 @@ import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
+import com.jccv.tuprivadaapp.model.receipt.Receipt;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
 import com.jccv.tuprivadaapp.service.charge.ChargeService;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,9 +72,9 @@ public class PaymentServiceImp implements PaymentService {
 
 
     @Override
-    public PaymentDto findById(Long id) {
-        Payment payment = paymentRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Payiment not found with Id: " + id));
-        return paymentMapper.toDTO(payment);
+    public PaymentResidentDetailsDto findById(Long id) {
+        return paymentRepository.findPaymentDetailsDtoById(id).orElseThrow(()-> new ResourceNotFoundException("Payment not found with Id: " + id));
+
     }
 
     @Override
@@ -94,6 +96,18 @@ public class PaymentServiceImp implements PaymentService {
         updatedPayment.setId(existingPayment.getId());
 
         updatedPayment = paymentRepository.save(updatedPayment);
+
+
+        return paymentMapper.toDTO(updatedPayment);
+    }
+
+    @Override
+    @Transactional
+    public PaymentDto update(Payment payment) {
+
+
+
+        Payment updatedPayment = paymentRepository.save(payment);
 
 
         return paymentMapper.toDTO(updatedPayment);
@@ -148,6 +162,52 @@ public class PaymentServiceImp implements PaymentService {
 
         double newBalance = 0;
         if(isPaid){
+            newBalance -= payment.getCharge().getAmount() - totalDepositsPayment;
+            Charge charge = chargeService.findById(chargeId);
+            pollingNotificationService.createNotification(PollingNotificationDto.builder()
+                    .title("Pago: " + charge.getTitleTypePayment())
+                    .message(charge.getDescription())
+                    .userId(resident.getUser().getId())
+                    .read(false)
+                    .build());
+
+            oneSignalPushNotificationService.sendPushToUser(PushNotificationRequest.builder()
+                    .title("Pago Exitoso.!")
+                    .message(charge.getTitleTypePayment())
+                    .userId(resident.getUser().getId())
+                    .build());
+        }else{
+
+            newBalance += payment.getCharge().getAmount() - totalDepositsPayment;
+        }
+        residentService.updateBalanceResident(resident, newBalance);
+    }
+
+    @Override
+    @Transactional
+    public void updateIsPaidStatusV2(Long chargeId, Long residentId, PaymentCompletedDto paymentCompletedDto) {
+        Resident resident = residentService.getResidentById(residentId).orElseThrow(()-> new ResourceNotFoundException("No se encontro al residente con el ID: " + residentId));
+
+        Payment payment = paymentRepository.findByResidentIdAndChargeId(residentId, chargeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for residentId: "
+                        + residentId + " and chargeId: " + chargeId));
+        boolean lastPayment = payment.isPaid();
+        double totalDepositsPayment = depositPaymentService.getTotalDepositsAmountByPaymentId(payment.getId());
+
+        double balanceAfterPaid = resident.getBalance() - payment.getCharge().getAmount() + totalDepositsPayment;
+        if(paymentCompletedDto.getIsPaid() && balanceAfterPaid < 0){
+            throw new BadRequestException("Saldo insuficiente para hacer el pago");
+        }
+        LocalDateTime date  = paymentCompletedDto.getDatePaid() != null ? paymentCompletedDto.getDatePaid() : LocalDateTime.now();
+        payment.setPaid(paymentCompletedDto.getIsPaid());
+        payment.setDatePaid(paymentCompletedDto.getIsPaid() ? date : null);
+        paymentRepository.save(payment);
+
+
+        double newBalance = 0;
+        if(lastPayment != paymentCompletedDto.getIsPaid()){
+
+        if(paymentCompletedDto.getIsPaid()){
              newBalance -= payment.getCharge().getAmount() - totalDepositsPayment;
            Charge charge = chargeService.findById(chargeId);
            pollingNotificationService.createNotification(PollingNotificationDto.builder()
@@ -163,10 +223,10 @@ public class PaymentServiceImp implements PaymentService {
                     .userId(resident.getUser().getId())
                     .build());
        }else{
-
              newBalance += payment.getCharge().getAmount() - totalDepositsPayment;
        }
         residentService.updateBalanceResident(resident, newBalance);
+        }
     }
 
     @Override
@@ -243,7 +303,7 @@ public class PaymentServiceImp implements PaymentService {
                         .transactionId(payment.getPaymentId())
                         .transactionType("PAYMENT")
                         .title(payment.getTitleTypePayment())
-                        .date(payment.getChargeDate())
+                        .date(payment.getDatePaid() != null ? payment.getDatePaid() : payment.getChargeDate())
                         .amount(payment.getAmount())
                         .description(payment.getDescription())
                         .build())
@@ -268,6 +328,53 @@ public class PaymentServiceImp implements PaymentService {
 
         // Retornar un Page a partir de la lista combinada (puedes ajustar la paginación según lo necesites)
         return new PageImpl<>(allTransactions, pageable, allTransactions.size());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<PaymentDetailsDto> getResidentTransactionsV2(Long residentId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 1. Obtener la página de pagos
+        Page<PaymentDetailsDto> paymentPage = paymentRepository.findByResidentIdAndIsPaidTrueAndIsDeletedFalse(residentId, pageable);
+        List<DepositPaymentDto> depositList = depositPaymentService.getDepositsByResidentId(residentId);
+
+        System.out.println(depositList.size());
+
+        // 4. Mapear los pagos a PaymentDetailsDto (sin transactionType)
+        List<PaymentDetailsDto> transactionsFromPayments = paymentPage.getContent().stream()
+                .toList();
+
+
+        // 5. Mapear los depósitos a PaymentDetailsDto con solo los campos relevantes
+        List<PaymentDetailsDto> transactionsFromDeposits = depositList.stream()
+                .map(deposit -> PaymentDetailsDto.builder()
+                        .depositId(deposit.getId())
+                        .paymentId(deposit.getPaymentId())
+                        .isPaid(true)
+                        .isDeleted(false)
+                        .chargeDate(deposit.getDepositDate())
+                        .datePaid(deposit.getDepositDate())
+                        .amount(deposit.getAmount())
+                        .titleTypePayment(deposit.getTitle())
+                        .description(deposit.getDescription())
+                        .build())
+                .toList();
+
+        // 6. Combinar ambas listas y ordenar por fecha
+        List<PaymentDetailsDto> allTransactions = Stream.concat(
+                        transactionsFromPayments.stream(),
+                        transactionsFromDeposits.stream()
+                )
+                .sorted(Comparator.comparing(PaymentDetailsDto::getDatePaid, Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
+
+        // 7. Crear la página manual
+        int start = Math.min((int) pageable.getOffset(), allTransactions.size());
+        int end = Math.min((start + pageable.getPageSize()), allTransactions.size());
+        List<PaymentDetailsDto> pagedList = allTransactions.subList(start, end);
+
+        return new PageImpl<>(pagedList, pageable, allTransactions.size());
     }
 
 
@@ -409,4 +516,39 @@ public class PaymentServiceImp implements PaymentService {
 //
 //        logger.info("Finished processOverduePayments.");
 //    }
+
+
+    @Override
+    public Double getRemainingAmountByPaymentId(Long paymentId){
+        Double remaining = paymentRepository.getRemainingAmountByPaymentId(paymentId);
+        if (remaining == null) {
+            throw new ResourceNotFoundException("Payment no encontrado con el id: " + paymentId);
+        }
+        return remaining;
+    }
+
+    @Override
+    public Receipt generatePaymentReceiptData(Long id) {
+
+        Payment payment = paymentRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("Payment no encontrado con el id: " + id));
+        boolean hasDeposits = payment.getDepositPayments().isEmpty();
+
+        String residentAddress = payment.getResident().getAddressResident().getStreet().concat(" #").concat(payment.getResident().getAddressResident().getExtNumber());
+        String residentName = payment.getResident().getUser().getFirstName().concat(" ").concat(payment.getResident().getUser().getLastName());
+
+        return  Receipt.builder()
+                .payment(payment)
+                .receiptName(hasDeposits? "Liquidacion de pago" : "Pago")
+                .createdAt(LocalDateTime.now())
+                .condominium(payment.getCharge().getCondominium())
+                .amount(payment.getCharge().getAmount())
+                .residentAddress(residentAddress)
+                .residentName(residentName)
+                .datePaid(payment.getDatePaid())
+                .title(payment.getCharge().getTitleTypePayment())
+                .description(payment.getCharge().getDescription())
+                .build();
+
+
+    }
 }

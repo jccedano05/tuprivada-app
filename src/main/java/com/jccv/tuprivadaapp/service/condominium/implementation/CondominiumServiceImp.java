@@ -3,6 +3,7 @@ package com.jccv.tuprivadaapp.service.condominium.implementation;
 
 import com.jccv.tuprivadaapp.dto.condominium.CondominiumDto;
 import com.jccv.tuprivadaapp.dto.condominium.mapper.CondominiumMapper;
+import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.condominium.Address;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
@@ -61,6 +62,19 @@ public class CondominiumServiceImp implements CondominiumService {
             condominium.setAddress(address);
         }
         return condominiumRepository.save(condominium);
+    }
+
+    @Override
+    public String findConnectedAccountIdByCondominiumId(Long condominiumId) {
+        Condominium condominium = condominiumRepository.findById(condominiumId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el condominio con el id: " + condominiumId));
+
+        if (condominium.getConnectedAccountId() == null) {
+            throw new BadRequestException("El conodominio no tiene asociada una cuenta para pagos en linea (ConnectedAccountId)");
+        }
+
+        return condominium.getConnectedAccountId();
+
     }
 
     public void deleteById(Long id) {

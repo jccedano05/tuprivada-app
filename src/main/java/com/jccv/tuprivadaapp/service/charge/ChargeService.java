@@ -3,8 +3,8 @@ package com.jccv.tuprivadaapp.service.charge;
 import com.jccv.tuprivadaapp.dto.charge.AnnualChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
+import com.jccv.tuprivadaapp.dto.resident.ResidentChargeSummaryDto;
 import com.jccv.tuprivadaapp.model.charge.Charge;
-import com.jccv.tuprivadaapp.model.payment.Payment;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -27,7 +27,6 @@ public interface ChargeService {
     AnnualChargeSummaryDto getAnnualChargeSummary(Long condominiumId, int year);
 
     void deleteChargeById(Long ChargeId);
-
 
     @Transactional
     void logicalDeleteCharge(Long chargeId);

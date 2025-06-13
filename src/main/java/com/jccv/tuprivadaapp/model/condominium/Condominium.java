@@ -37,6 +37,12 @@ public class Condominium {
     @NotBlank(message = "El nombre de la privada no puede estar vacío")
     private String name;
 
+    private String connectedAccountId;
+
+    @Column(name = "logo_image_name")
+    private String logoImageName; // Ej: "logo_adco.jpeg"
+
+
 
 
     @OneToMany(mappedBy = "condominium")

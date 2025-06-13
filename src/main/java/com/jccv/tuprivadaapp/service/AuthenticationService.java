@@ -102,6 +102,7 @@ public class AuthenticationService {
                     residentService.saveResident(Resident.builder()
                             .user(user)
                                     .isActiveResident(true)
+                                    .balance(0.0)
                                     .condominium(condominiumService.findById(request.getCondominiumId()))
                             .build());
                     return user;
@@ -191,6 +192,9 @@ public class AuthenticationService {
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setCountryCode(request.getCountryCode());
+        user.setPhone(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         if (request.getCondominiumId() != null ) {

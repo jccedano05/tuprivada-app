@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.resident.implementation;
 
+import com.jccv.tuprivadaapp.dto.resident.ResidentChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.resident.ResidentDto;
 import com.jccv.tuprivadaapp.dto.resident.ResidentMapper;
 import com.jccv.tuprivadaapp.dto.resident.ResidentRelevantInfoDto;
@@ -79,6 +80,11 @@ public class ResidentServiceImp implements ResidentService {
     }
 
     @Override
+    public List<Resident> getAllByCondominiumId(Long condominiumId) {
+        return residentRepository.findAllByCondominiumIdAndIsActiveResidentTrueOrderByStreetAndExtNumberIgnoreCase(condominiumId);
+    }
+
+    @Override
     public List<Resident> getResidentsByIds(List<Long> residentIds) {
         return residentRepository.findAllById(residentIds);
     }
@@ -100,5 +106,10 @@ public class ResidentServiceImp implements ResidentService {
     public Double getBalanceOfResidentById(Long id) {
         Resident resident = residentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Resident not found with id: " + id));
         return resident.getBalance();
+    }
+
+    @Override
+    public List<ResidentChargeSummaryDto> getAllResidentsChargesSummariesByCondominiumId(Long condominiumId){
+        return residentRepository.getAllResidentsChargesSummariesByCondominiumId(condominiumId);
     }
 }

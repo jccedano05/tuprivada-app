@@ -17,6 +17,8 @@ public interface CondominiumService {
 
     public Condominium update(CondominiumDto condominiumDto);
 
+    public String findConnectedAccountIdByCondominiumId(Long condominiumId);
+
 
     public void deleteById(Long id);
 

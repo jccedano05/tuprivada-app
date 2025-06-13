@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.resident;
 
+import com.jccv.tuprivadaapp.dto.resident.ResidentChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.resident.ResidentDto;
 import com.jccv.tuprivadaapp.dto.resident.ResidentRelevantInfoDto;
 import com.jccv.tuprivadaapp.model.contact.Contact;
@@ -28,6 +29,9 @@ public interface ResidentService {
 
     public void updateBalanceResident(Long residentId, Double amountToInclude);
     public void updateBalanceResident(Resident resident, Double amountToInclude);
+    public List<Resident> getAllByCondominiumId(Long condominiumId);
+
+    List<ResidentChargeSummaryDto> getAllResidentsChargesSummariesByCondominiumId(Long condominiumId);
 
     Double getBalanceOfResidentById(Long id);
 }

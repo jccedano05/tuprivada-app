@@ -70,6 +70,7 @@ public class PaymentController {
         }
     }
 
+    @PreAuthorize(USER_LEVEL)
     @GetMapping("/{id}")
     public ResponseEntity<?> getPaymentById(@PathVariable Long id) {
         try{
@@ -121,6 +122,23 @@ public class PaymentController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PutMapping("/charges/{chargeId}/residents/{residentId}/updateIsPaidStatusV2")
+    public ResponseEntity<?> updateIsPaidStatusV2(@PathVariable Long chargeId, @PathVariable Long residentId, @RequestBody PaymentCompletedDto paymentCompletedDto) {
+        try{
+            paymentService.updateIsPaidStatusV2(chargeId, residentId, paymentCompletedDto);
+            return new ResponseEntity<>("Actualizacion del pago exitosa.!", HttpStatus.OK);
+        }
+        catch (BadRequestException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     @PreAuthorize(USER_LEVEL)
     @GetMapping("/resident/{residentId}/unpaid")
     public ResponseEntity<Page<PaymentDetailsDto>> getUnpaidPayments(
@@ -128,7 +146,9 @@ public class PaymentController {
             @RequestParam(defaultValue = "0") int page,   // Página por defecto es 0
             @RequestParam(defaultValue = "10") int size) {  // Tamaño por defecto es 10
         // Llamada al servicio con paginación
+
         Page<PaymentDetailsDto> unpaidPayments = paymentService.getUnpaidPaymentsForResident(residentId, page, size);
+
 
         // Retornar la respuesta con el objeto Page
         return ResponseEntity.ok(unpaidPayments);
@@ -152,6 +172,17 @@ public class PaymentController {
             @RequestParam(defaultValue = "10") int size) {
 //        Page<PaymentDetailsDto> paidPayments = paymentService.getPaidPaymentsForResident(residentId, page, size);
         Page<TransactionDto> paidPayments = paymentService.getResidentTransactions(residentId, page, size);
+        return ResponseEntity.ok(paidPayments);
+    }
+
+    @PreAuthorize(USER_LEVEL)
+    @GetMapping("/resident/{residentId}/paid-with-deposits-v2")
+    public ResponseEntity<Page<?>> getPaidPaymentsWithDepositsV2(
+            @PathVariable Long residentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+//        Page<PaymentDetailsDto> paidPayments = paymentService.getPaidPaymentsForResident(residentId, page, size);
+        Page<PaymentDetailsDto> paidPayments = paymentService.getResidentTransactionsV2(residentId, page, size);
         return ResponseEntity.ok(paidPayments);
     }
 

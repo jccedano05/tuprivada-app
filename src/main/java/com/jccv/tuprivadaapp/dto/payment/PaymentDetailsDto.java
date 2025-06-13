@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class PaymentDetailsDto {
     private Long paymentId;
+    private Long depositId;
     private boolean isPaid;
     private boolean isDeleted;
     private LocalDateTime chargeDate;
@@ -18,7 +19,8 @@ public class PaymentDetailsDto {
     private double amount;
     private String description;  // Descripción del cargo
     private boolean isActive;     // Indica si el cargo está activo
-    private LocalDateTime dueDate; // Fecha de vencimiento
-    private Double penaltyValue; // Valor del recargo, si aplica
+    private LocalDateTime dueDate;
+    private Double penaltyValue;
     private LocalDateTime datePaid;
+
 }

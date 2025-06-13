@@ -21,6 +21,17 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<Payment> findByResidentIdAndChargeId(Long residentId, Long chargeId);
 
+    @Query("SELECT new com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto( " +
+            "p.id, r.id, c.id, u.firstName, u.lastName, p.isPaid, c.amount, c.description, " +
+            "a.street, a.extNumber, a.intNumber, p.datePaid) " +
+            "FROM Payment p " +
+            "JOIN p.resident r " +
+            "JOIN r.user u " +
+            "JOIN r.addressResident a " +
+            "JOIN p.charge c " +
+            "WHERE p.id = :id")
+    Optional<PaymentResidentDetailsDto> findPaymentDetailsDtoById(@Param("id") Long id);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Payment p WHERE p.charge.id = :chargeId")
@@ -34,21 +45,21 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
 
     @Query("SELECT new com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto(" +
-            "p.id, p.isPaid, p.isDeleted, c.chargeDate, c.titleTypePayment, c.amount, c.description, c.isActive, c.dueDate, c.penaltyValue, p.datePaid) " +
+            "p.id, null, p.isPaid, p.isDeleted, c.chargeDate, c.titleTypePayment, c.amount, c.description, c.isActive, c.dueDate, c.penaltyValue, p.datePaid) " +
             "FROM Payment p JOIN p.charge c " +
             "WHERE p.resident.id = :residentId AND p.isPaid = false AND p.isDeleted = false " +
             "ORDER BY c.chargeDate DESC")
     Page<PaymentDetailsDto> findByResidentIdAndIsPaidFalseAndIsDeletedFalse(@Param("residentId") Long residentId, Pageable pageable);
 
     @Query("SELECT new com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto(" +
-            "p.id, p.isPaid, p.isDeleted, c.chargeDate, c.titleTypePayment, c.amount, c.description, c.isActive, c.dueDate, c.penaltyValue, p.datePaid) " +
+            "p.id, null, p.isPaid, p.isDeleted, c.chargeDate, c.titleTypePayment, c.amount, c.description, c.isActive, c.dueDate, c.penaltyValue, p.datePaid) " +
             "FROM Payment p JOIN p.charge c " +
             "WHERE p.resident.id = :residentId AND p.isPaid = true AND p.isDeleted = false " +
             "ORDER BY c.chargeDate DESC")
     Page<PaymentDetailsDto> findByResidentIdAndIsPaidTrueAndIsDeletedFalse(@Param("residentId") Long residentId, Pageable pageable);
 
     @Query("SELECT new com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto(" +
-            "p.id, p.isPaid, p.isDeleted, c.chargeDate, c.titleTypePayment, c.amount, c.description, c.isActive, c.dueDate, c.penaltyValue, p.datePaid) " +
+            "p.id, null, p.isPaid, p.isDeleted, c.chargeDate, c.titleTypePayment, c.amount, c.description, c.isActive, c.dueDate, c.penaltyValue, p.datePaid) " +
             "FROM Payment p JOIN p.charge c " +
             "WHERE p.resident.id = :residentId AND c.chargeDate BETWEEN :startDate AND :endDate AND p.isDeleted = false " +
             "ORDER BY c.chargeDate DESC")
@@ -142,6 +153,21 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Transactional
     @Query("UPDATE Payment p SET p.isDeleted = true WHERE p.charge.id = :chargeId")
     int markPaymentsAsDeletedByChargeId(@Param("chargeId") Long chargeId);
+
+
+
+    //Obtener el saldo restante de un payment descontando los abonos (deposit payments)
+    @Query("""
+    SELECT 
+        p.charge.amount - COALESCE(SUM(dp.amount), 0)
+    FROM Payment p
+    LEFT JOIN DepositPayment dp ON dp.payment.id = p.id
+    WHERE p.id = :paymentId
+    GROUP BY p.charge.amount
+""")
+    Double getRemainingAmountByPaymentId(@Param("paymentId") Long paymentId);
+
+
 
 
 }
