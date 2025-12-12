@@ -1,9 +1,11 @@
 package com.jccv.tuprivadaapp.controller.payment;
 
 import com.jccv.tuprivadaapp.dto.payment.DepositPaymentDto;
+import com.jccv.tuprivadaapp.dto.transaction.DepositDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.service.payment.DepositPaymentService;
+import com.jccv.tuprivadaapp.service.transaction.DepositService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,14 @@ import java.util.List;
 public class DepositPaymentController {
 
     @Autowired
-    private DepositPaymentService depositPaymentService;
+    private final DepositPaymentService depositPaymentService;
+    @Autowired
+    private final DepositService depositService;
+
+    public DepositPaymentController(DepositPaymentService depositPaymentService, DepositService depositService) {
+        this.depositPaymentService = depositPaymentService;
+        this.depositService = depositService;
+    }
 
     // Endpoint para crear un abono para un Payment específico
     @PostMapping("/{paymentId}")

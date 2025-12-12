@@ -18,6 +18,7 @@ public class VisitMapper {
                 .visitorDocument(visitDto.getVisitorDocument())
                 .status(visitDto.getStatus())
                 .user(user)
+                .condominium(user.getCondominium())
                 .build();
 
     }
@@ -25,13 +26,14 @@ public class VisitMapper {
     public VisitDto toDto(Visit visit) {
         return VisitDto.builder()
                 .id(visit.getId())
+                .userId(visit.getUser().getId())
+                .condominiumId(visit.getCondominium().getId())
                 .visitDate(visit.getVisitDate())
                 .expirationDate(visit.getExpirationDate())
                 .qrToken(visit.getQrToken())
                 .visitorName(visit.getVisitorName())
                 .visitorDocument(visit.getVisitorDocument())
                 .status(visit.getStatus())
-                .userId(visit.getUser().getId())
                 .build();
 
     }

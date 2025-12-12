@@ -1,7 +1,7 @@
 package com.jccv.tuprivadaapp.model.payment;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import jakarta.persistence.*;
@@ -52,13 +52,13 @@ public class Payment {
     @ToString.Exclude
     private Charge charge;
 
-    @OneToMany(mappedBy = "payment")
-    @JsonManagedReference
+    @OneToMany(mappedBy = "payment", fetch = FetchType.LAZY)
+    @JsonIgnore
     @ToString.Exclude
     private List<DepositPayment> depositPayments;
 
-    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     @ToString.Exclude
     private List<StripePaymentIntent> stripePaymentIntents;
 }

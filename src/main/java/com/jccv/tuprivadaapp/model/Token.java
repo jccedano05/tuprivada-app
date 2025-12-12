@@ -1,6 +1,6 @@
 package com.jccv.tuprivadaapp.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,9 +24,9 @@ public class Token {
     @Column(name = "is_logged_out")
     private boolean loggedOut;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @JsonBackReference
+    @JsonIgnore
     @ToString.Exclude
     private User user;
 

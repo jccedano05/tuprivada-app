@@ -27,15 +27,13 @@ public class AccountBankServiceImp implements AccountBankService {
     private final AccountBankRepository accountBankRepository;
     private final AccountBankMapper accountBankMapper;
 
-    private final UserSessionInformation userSessionInformation;
 
     private final ResidentService residentService;
 
 @Autowired
-    public AccountBankServiceImp(AccountBankRepository accountBankRepository, AccountBankMapper accountBankMapper, UserSessionInformation userSessionInformation, ResidentService residentService) {
+    public AccountBankServiceImp(AccountBankRepository accountBankRepository, AccountBankMapper accountBankMapper,  ResidentService residentService) {
         this.accountBankRepository = accountBankRepository;
         this.accountBankMapper = accountBankMapper;
-        this.userSessionInformation = userSessionInformation;
         this.residentService = residentService;
     }
 

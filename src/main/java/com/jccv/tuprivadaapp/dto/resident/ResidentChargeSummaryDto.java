@@ -15,5 +15,6 @@ public class ResidentChargeSummaryDto {
     private String extNumber;
     private Long paidPayments;     // Cambiado a Long para que coincida con SUM(CASE) en JPQL
     private Long unpaidPayments;   // Cambiado a Long para que coincida con SUM(CASE) en JPQL
-    private Double totalDue;       // SUM sobre monto (double) → Double  
+    private Double totalDue;       // SUM sobre monto (double) → Double
+    private Double balance;
 }

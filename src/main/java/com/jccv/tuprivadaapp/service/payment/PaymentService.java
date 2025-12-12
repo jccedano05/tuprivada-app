@@ -47,6 +47,8 @@ public interface PaymentService {
 
     public void deletePaymentByResidentIdAndChargeId(Long residentId, Long chargeId);
 
+    public void deletePaymentByPaymentId(Long paymentId);
+
 
     public void updateIsPaidStatus(Long chargeId, Long residentId, Boolean isPaid);
 

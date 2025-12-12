@@ -1,5 +1,5 @@
-# Usar una imagen base de OpenJDK
-FROM openjdk:17-jdk-slim
+# Usar una imagen base de Eclipse Temurin (OpenJDK oficial)
+FROM eclipse-temurin:17-jdk-alpine
 
 # Crear un directorio para la aplicación
 WORKDIR /app

@@ -10,7 +10,9 @@ import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.receipt.Receipt;
 import com.jccv.tuprivadaapp.model.resident.Resident;
+import com.jccv.tuprivadaapp.model.transaction.Deposit;
 import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
+import com.jccv.tuprivadaapp.repository.transaction.DepositRepository;
 import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.payment.DepositPaymentService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
@@ -50,8 +52,10 @@ public class PaymentServiceImp implements PaymentService {
     private final OneSignalPushNotificationService oneSignalPushNotificationService;
 
 
+    private final DepositRepository depositRepository;
+
     @Autowired
-    public PaymentServiceImp(OneSignalPushNotificationService oneSignalPushNotificationService , PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, @Lazy ChargeService chargeService, DepositPaymentService depositPaymentService, PollingNotificationService pollingNotificationService) {
+    public PaymentServiceImp(OneSignalPushNotificationService oneSignalPushNotificationService , PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, @Lazy ChargeService chargeService, DepositPaymentService depositPaymentService, PollingNotificationService pollingNotificationService, DepositRepository depositRepository) {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
         this.residentService = residentService;
@@ -59,6 +63,7 @@ public class PaymentServiceImp implements PaymentService {
         this.depositPaymentService = depositPaymentService;
         this.pollingNotificationService = pollingNotificationService;
         this.oneSignalPushNotificationService = oneSignalPushNotificationService;
+        this.depositRepository = depositRepository;
     }
 
     @Override
@@ -133,6 +138,20 @@ public class PaymentServiceImp implements PaymentService {
     }
 
 
+    @Override
+    @Transactional
+    public void deletePaymentByPaymentId(Long paymentId){
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found for paymentId: "
+                + paymentId));
+        if(payment.isPaid()){
+            residentService.updateBalanceResident(payment.getResident().getId(), payment.getCharge().getAmount());
+            depositPaymentService.deleteAllDepositsByPaymentId(payment.getId());
+        }else{
+            depositPaymentService.deleteAllDepositsWithBalanceUpdateByPaymentId(payment.getId(), payment.getResident());
+        }
+        paymentRepository.delete(payment);
+    }
+
 
     @Override
     @Transactional
@@ -195,7 +214,7 @@ public class PaymentServiceImp implements PaymentService {
         double totalDepositsPayment = depositPaymentService.getTotalDepositsAmountByPaymentId(payment.getId());
 
         double balanceAfterPaid = resident.getBalance() - payment.getCharge().getAmount() + totalDepositsPayment;
-        if(paymentCompletedDto.getIsPaid() && balanceAfterPaid < 0){
+        if(paymentCompletedDto.getIsPaid() && balanceAfterPaid < 0 && !paymentCompletedDto.getIsDepositAddedSelected()){
             throw new BadRequestException("Saldo insuficiente para hacer el pago");
         }
         LocalDateTime date  = paymentCompletedDto.getDatePaid() != null ? paymentCompletedDto.getDatePaid() : LocalDateTime.now();
@@ -203,6 +222,18 @@ public class PaymentServiceImp implements PaymentService {
         payment.setDatePaid(paymentCompletedDto.getIsPaid() ? date : null);
         paymentRepository.save(payment);
 
+
+        if(paymentCompletedDto.getIsDepositAddedSelected() && paymentCompletedDto.getIsPaid()){
+            Deposit deposit = Deposit.builder()
+                    .issuingBank("Sin banco")
+                    .resident(resident)
+                    .balanceAfterDeposit(resident.getBalance())
+                    .bankTrackingKey("Sin referencia")
+                    .amount( payment.getCharge().getAmount() - totalDepositsPayment)
+                    .depositDate(paymentCompletedDto.getDatePaid())
+                    .build();
+            depositRepository.save(deposit);
+        }
 
         double newBalance = 0;
         if(lastPayment != paymentCompletedDto.getIsPaid()){
@@ -225,7 +256,10 @@ public class PaymentServiceImp implements PaymentService {
        }else{
              newBalance += payment.getCharge().getAmount() - totalDepositsPayment;
        }
-        residentService.updateBalanceResident(resident, newBalance);
+        if(!paymentCompletedDto.getIsDepositAddedSelected()){
+
+            residentService.updateBalanceResident(resident, newBalance);
+        }
         }
     }
 

@@ -2,7 +2,6 @@ package com.jccv.tuprivadaapp.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
@@ -69,7 +68,7 @@ public class User implements UserDetails {
     private Condominium condominium;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    @JsonManagedReference  // Este lado se serializa
+    @JsonIgnore
     @ToString.Exclude
     private List<Token> tokens;
 

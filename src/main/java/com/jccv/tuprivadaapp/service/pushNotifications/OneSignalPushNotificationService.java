@@ -7,6 +7,7 @@ import com.jccv.tuprivadaapp.repository.pushNotificacion.OneSignalPushNotificati
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -37,7 +38,7 @@ public class OneSignalPushNotificationService {
     }
 
 
-
+    @Async
     public void sendPushToResidentsList(List<Long> residentsId ,PushNotificationRequest request) {
 
         List<OneSignalPushNotification> notifications =
@@ -78,7 +79,7 @@ public class OneSignalPushNotificationService {
     }
 
 
-
+    @Async
     public void sendPushToCondominium(Long condominiumId ,PushNotificationRequest request) {
 
         List<OneSignalPushNotification> notifications =
@@ -119,6 +120,7 @@ public class OneSignalPushNotificationService {
     }
 
 
+    @Async
     public void sendPushToUser(PushNotificationRequest request) {
 
         List<OneSignalPushNotification> notifications =

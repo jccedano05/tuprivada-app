@@ -1,6 +1,6 @@
 package com.jccv.tuprivadaapp.model.payment;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -47,9 +47,12 @@ public class StripePaymentIntent {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "voucher_url")
+    private String voucherUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnore
     @ToString.Exclude
     private Payment payment;
 }

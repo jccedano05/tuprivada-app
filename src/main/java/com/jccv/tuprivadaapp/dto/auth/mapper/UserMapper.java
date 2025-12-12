@@ -62,6 +62,7 @@ public class UserMapper {
                 .condominium(user.getCondominium())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .phone(user.getPhone())
                 .bankPersonalReference(user.getBankPersonalReference())
                 .build();
     }

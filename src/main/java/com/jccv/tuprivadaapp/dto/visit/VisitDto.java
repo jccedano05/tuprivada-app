@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 public class VisitDto {
     private Long id;
+    private Long condominiumId;
     private String visitorName;
     private String visitorDocument;
     private LocalDateTime visitDate;

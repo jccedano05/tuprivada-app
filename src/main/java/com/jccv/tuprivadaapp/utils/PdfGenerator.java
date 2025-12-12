@@ -238,7 +238,7 @@ public class PdfGenerator {
         mainTable.addCell(getCell(receipt.getOperationCode(), false));
 
         mainTable.addCell(getCell("Fecha de Pago:", true));
-        mainTable.addCell(getCell(receipt.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), false));
+        mainTable.addCell(getCell(receipt.getDatePaid().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), false));
 
         mainTable.addCell(getCell("Monto:", true));
         mainTable.addCell(getCell("MX$" + String.format("%,.2f", receipt.getAmount()), false));

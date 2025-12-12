@@ -48,10 +48,13 @@ public class VisitController {
             VisitDto visitDto = visitService.validateQrToken(qrToken);
             return new ResponseEntity<>(visitDto, HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (BadRequestException e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -60,11 +63,14 @@ public class VisitController {
     @GetMapping("/active")
     public ResponseEntity<?> getActiveVisits(@RequestParam("userId") Long userId) {
         try {
+            System.out.println("active");
             List<VisitDto> activeVisits = visitService.getActiveVisits(userId);
             return new ResponseEntity<>(activeVisits, HttpStatus.OK);
         }  catch (ResourceNotFoundException e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -78,8 +84,10 @@ public class VisitController {
             List<VisitDto> history = visitService.getAnnualHistory(userId, year);
             return new ResponseEntity<>(history, HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -94,8 +102,10 @@ public class VisitController {
             List<VisitDto> dailyVisits = visitService.getDailyVisits(condominiumId, start, end);
             return new ResponseEntity<>(dailyVisits, HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StripePaymentRequest {
 
-    private Long condominiumId;
+
     private Long paymentId;
-    private String paymentType;
+    private String paymentMethodType;
+    private String email;
 }

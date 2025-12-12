@@ -107,8 +107,6 @@ public class ReceiptServiceImp implements ReceiptService {
 
         switch (typesReceipt) {
             case PAYMENT -> {
-                System.out.println(id);
-                System.out.println(typesReceipt);
                 receipt = receiptRepository.findByPaymentId(id).orElse(null);
             }
             case DEPOSIT_PAYMENT -> {
