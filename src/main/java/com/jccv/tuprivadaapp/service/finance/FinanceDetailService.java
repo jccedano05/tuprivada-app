@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.service.finance;
 
+import com.jccv.tuprivadaapp.dto.finance.FinanceDetailBatchItemDto;
 import com.jccv.tuprivadaapp.dto.finance.FinanceDetailDto;
 
 import java.util.List;
@@ -10,4 +11,5 @@ public interface FinanceDetailService {
     List<FinanceDetailDto> getFinanceDetailsByFinance(Long financeId);
     FinanceDetailDto updateFinanceDetail(Long id, FinanceDetailDto financeDetailDto);
     void deleteFinanceDetail(Long id);
+    List<FinanceDetailDto> createFinanceDetails(Long financeId, Long categoryId, List<FinanceDetailBatchItemDto> financeDetailDtos);
 }

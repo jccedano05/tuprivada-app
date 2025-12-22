@@ -10,4 +10,6 @@ import lombok.*;
 public class UserUpdateDto {
     private String firstName;
     private String lastName;
+    private String phone;
+    private String countryCode;
 }

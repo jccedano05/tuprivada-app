@@ -11,11 +11,14 @@ import com.jccv.tuprivadaapp.model.admin.Admin;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.model.resident.Resident;
 import com.jccv.tuprivadaapp.repository.TokenRepository;
+import com.jccv.tuprivadaapp.repository.auth.facade.UserFacade;
 import com.jccv.tuprivadaapp.service.admin.AdminService;
 import com.jccv.tuprivadaapp.service.condominium.CondominiumService;
-import com.jccv.tuprivadaapp.repository.auth.facade.UserFacade;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
+import com.jccv.tuprivadaapp.util.ContactInfoValidator;
 import io.jsonwebtoken.JwtException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,26 +27,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
-
 @Service
 public class AuthenticationService {
 
 
-     private final PasswordEncoder passwordEncoder;
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
-     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
-     private final UserDto userDto;
+    private final JwtService jwtService;
+
+    private final UserDto userDto;
 
 
-     private final UserFacade userFacade;
+    private final UserFacade userFacade;
 
-     private final CondominiumService condominiumService;
+    private final CondominiumService condominiumService;
 
-     private final TokenRepository tokenRepository;
+    private final TokenRepository tokenRepository;
 
     private final AuthenticationManager authenticationManager;
     private final AuthorizationService authorizationService;
@@ -193,8 +196,7 @@ public class AuthenticationService {
         user.setLastName(request.getLastName());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setCountryCode(request.getCountryCode());
-        user.setPhone(request.getPhone());
+        applyContactInfo(user, request.getPhone(), request.getCountryCode());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         if (request.getCondominiumId() != null ) {
@@ -239,6 +241,7 @@ public class AuthenticationService {
         if(request.getLastName() != null){
             user.setLastName(request.getLastName());
         }
+        applyContactInfo(user, request.getPhone(), request.getCountryCode());
         return userMapper.convertUserToUserDto(userFacade.save(user));
     }
 
@@ -258,6 +261,7 @@ public class AuthenticationService {
         if(request.getLastName() != null){
             user.setLastName(request.getLastName());
         }
+        applyContactInfo(user, request.getPhone(), request.getCountryCode());
         if(request.getRole() != null){
             if(request.getRole() == Role.SUPERADMIN){
                 throw new BadRequestException("No puedes proporcionar un Rol mayor a tu autoridad");
@@ -281,6 +285,7 @@ public class AuthenticationService {
         if(request.getLastName() != null){
             user.setLastName(request.getLastName());
         }
+        applyContactInfo(user, request.getPhone(), request.getCountryCode());
         if(request.getCondominiumId() != null){
             Condominium condominium = condominiumService.findById(request.getCondominiumId());
             user.setCondominium(condominium);

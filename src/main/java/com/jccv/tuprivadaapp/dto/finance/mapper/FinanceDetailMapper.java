@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.dto.finance.mapper;
 
+import com.jccv.tuprivadaapp.dto.finance.FinanceDetailBatchItemDto;
 import com.jccv.tuprivadaapp.dto.finance.FinanceDetailDto;
 import com.jccv.tuprivadaapp.model.finance.Finance;
 import com.jccv.tuprivadaapp.model.finance.FinanceCategory;
@@ -29,5 +30,15 @@ public class FinanceDetailMapper {
                 detail.getAmount(),
                 detail.getDescription()
         );
+    }
+
+    public FinanceDetail fromBatchItem(FinanceDetailBatchItemDto detail, Finance finance, FinanceCategory category) {
+        return FinanceDetail.builder()
+                .concept(detail.getConcept())
+                .description(detail.getDescription())
+                .amount(detail.getAmount())
+                .finance(finance)
+                .financeCategory(category)
+                .build();
     }
 }

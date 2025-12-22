@@ -12,6 +12,8 @@ import lombok.*;
 public class UserUpdateBySuperadminDto {
     private String firstName;
     private String lastName;
+    private String phone;
+    private String countryCode;
     private Long condominiumId;
     private Role role;
 }
