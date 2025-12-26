@@ -36,6 +36,18 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_GATEWAY, ex.getMessage(), null);
     }
 
+    @ExceptionHandler(SurveyValidationException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleSurveyValidation(SurveyValidationException ex) {
+        LOGGER.warn("Error de validación de encuesta: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(SurveyAlreadyVotedException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleSurveyAlreadyVoted(SurveyAlreadyVotedException ex) {
+        LOGGER.warn("Usuario ya votó en encuesta: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, Object>>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> validationErrors = new HashMap<>();

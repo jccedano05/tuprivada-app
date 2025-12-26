@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.service.stripe.implementation;
 
 import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
+import com.jccv.tuprivadaapp.dto.events.payment.PaymentCompletedEvent;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDto;
 import com.jccv.tuprivadaapp.dto.payment.mapper.PaymentMapper;
 import com.jccv.tuprivadaapp.dto.stripe.StripeOxxoVoucherResponse;
@@ -8,6 +9,7 @@ import com.jccv.tuprivadaapp.dto.stripe.StripePaymentIntentResponse;
 import com.jccv.tuprivadaapp.dto.stripe.StripePaymentRequest;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
+import com.jccv.tuprivadaapp.messaging.payment.PaymentEventProducer;
 import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.payment.StripePaymentIntent;
@@ -25,6 +27,8 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.net.RequestOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,21 +41,25 @@ import java.util.*;
 @Service
 public class StripePaymentsServiceImp implements StripePaymentsService {
 
+    private static final Logger log = LoggerFactory.getLogger(StripePaymentsServiceImp.class);
+
     private final CondominiumService condominiumService;
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
     private final StripePaymentIntentRepository stripePaymentIntentRepository;
     private final EmailService emailService;
     private final OneSignalPushNotificationService oneSignalPushNotificationService;
+    private final PaymentEventProducer paymentEventProducer;
 
     @Autowired
-    public StripePaymentsServiceImp(CondominiumService condominiumService, PaymentService paymentService, StripePaymentIntentRepository stripePaymentIntentRepository, PaymentRepository paymentRepository, EmailService emailService, OneSignalPushNotificationService oneSignalPushNotificationService) {
+    public StripePaymentsServiceImp(CondominiumService condominiumService, PaymentService paymentService, StripePaymentIntentRepository stripePaymentIntentRepository, PaymentRepository paymentRepository, EmailService emailService, OneSignalPushNotificationService oneSignalPushNotificationService, PaymentEventProducer paymentEventProducer) {
         this.condominiumService = condominiumService;
         this.paymentService = paymentService;
         this.paymentRepository = paymentRepository;
         this.stripePaymentIntentRepository = stripePaymentIntentRepository;
         this.emailService = emailService;
         this.oneSignalPushNotificationService = oneSignalPushNotificationService;
+        this.paymentEventProducer = paymentEventProducer;
     }
 
 
@@ -203,10 +211,30 @@ public class StripePaymentsServiceImp implements StripePaymentsService {
                 payment.setDatePaid(LocalDateTime.now());
                 paymentService.update(payment);
 
+                try {
+                    PaymentCompletedEvent event = new PaymentCompletedEvent(
+                            payment.getId(),
+                            payment.getResident().getId(),
+                            payment.getResident().getUser().getId(),
+                            payment.getResident().getUser().getEmail(),
+                            payment.getResident().getUser().getFirstName(),
+                            spi.getAmount() / 100.0,
+                            spi.getCurrency(),
+                            payment.getCharge().getTitleTypePayment(),
+                            payment.getCharge().getDescription()
+                    );
+                    paymentEventProducer.publishPaymentCompleted(event);
+                    log.info("Evento PaymentCompletedEvent publicado a Kafka para paymentId={}, eventId={}",
+                            payment.getId(), event.getEventId());
+                } catch (Exception kafkaEx) {
+                    log.error("Error publicando evento a Kafka para paymentId={}. Continuando con flujo normal.",
+                            payment.getId(), kafkaEx);
+                }
+
                 oneSignalPushNotificationService.sendPushToUser(
                         PushNotificationRequest.builder()
                                 .title("¡Pago Exitoso!")
-                                .message(payment.getCharge().getTitleTypePayment()) // O cualquier mensaje relacionado
+                                .message(payment.getCharge().getTitleTypePayment())
                                 .userId(payment.getResident().getUser().getId())
                                 .build()
                 );
@@ -217,7 +245,7 @@ public class StripePaymentsServiceImp implements StripePaymentsService {
                         "payment-success",
                         Map.of(
                                 "nombre", payment.getResident().getUser().getFirstName(),
-                                "monto", String.format("$%.2f", spi.getAmount() / 100.0) // si es en centavos
+                                "monto", String.format("$%.2f", spi.getAmount() / 100.0)
                         )
                 );
 

@@ -1,11 +1,13 @@
 package com.jccv.tuprivadaapp.service.payment.implementation;
 
 import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
+import com.jccv.tuprivadaapp.dto.events.payment.PaymentMarkedAsPaidEvent;
 import com.jccv.tuprivadaapp.dto.payment.*;
 import com.jccv.tuprivadaapp.dto.payment.mapper.PaymentMapper;
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
+import com.jccv.tuprivadaapp.messaging.notification.NotificationEventProducer;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.receipt.Receipt;
@@ -20,6 +22,8 @@ import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationServ
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 
 import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -39,6 +43,8 @@ import java.util.stream.Stream;
 @Service
 public class PaymentServiceImp implements PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentServiceImp.class);
+
     private final PaymentRepository paymentRepository;
 
     private final PaymentMapper paymentMapper;
@@ -54,8 +60,10 @@ public class PaymentServiceImp implements PaymentService {
 
     private final DepositRepository depositRepository;
 
+    private final NotificationEventProducer notificationEventProducer;
+
     @Autowired
-    public PaymentServiceImp(OneSignalPushNotificationService oneSignalPushNotificationService , PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, @Lazy ChargeService chargeService, DepositPaymentService depositPaymentService, PollingNotificationService pollingNotificationService, DepositRepository depositRepository) {
+    public PaymentServiceImp(OneSignalPushNotificationService oneSignalPushNotificationService , PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, @Lazy ChargeService chargeService, DepositPaymentService depositPaymentService, PollingNotificationService pollingNotificationService, DepositRepository depositRepository, NotificationEventProducer notificationEventProducer) {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
         this.residentService = residentService;
@@ -64,6 +72,7 @@ public class PaymentServiceImp implements PaymentService {
         this.pollingNotificationService = pollingNotificationService;
         this.oneSignalPushNotificationService = oneSignalPushNotificationService;
         this.depositRepository = depositRepository;
+        this.notificationEventProducer = notificationEventProducer;
     }
 
     @Override
@@ -247,6 +256,25 @@ public class PaymentServiceImp implements PaymentService {
                    .userId(resident.getUser().getId())
                    .read(false)
                    .build());
+
+            try {
+                PaymentMarkedAsPaidEvent event = new PaymentMarkedAsPaidEvent(
+                        payment.getId(),
+                        resident.getId(),
+                        resident.getUser().getId(),
+                        resident.getUser().getEmail(),
+                        resident.getUser().getFirstName(),
+                        charge.getTitleTypePayment(),
+                        charge.getDescription(),
+                        payment.getCharge().getAmount() - totalDepositsPayment
+                );
+                notificationEventProducer.publishPaymentMarkedAsPaid(event);
+                log.info("Evento PaymentMarkedAsPaidEvent publicado a Kafka para paymentId={}, eventId={}",
+                        payment.getId(), event.getEventId());
+            } catch (Exception kafkaEx) {
+                log.error("Error publicando evento a Kafka para paymentId={}. Continuando con flujo normal.",
+                        payment.getId(), kafkaEx);
+            }
 
             oneSignalPushNotificationService.sendPushToUser(PushNotificationRequest.builder()
                     .title("Pago Exitoso.!")

@@ -1,0 +1,21 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+
+    consumer:
+      group-id: tuprivada-app-consumer
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.jccv.tuprivadaapp.dto.events,com.jccv.tuprivadaapp.dto.events.payment,com.jccv.tuprivadaapp.dto.events.charge"
+        spring.json.type.mapping: "paymentCompleted:com.jccv.tuprivadaapp.dto.events.payment.PaymentCompletedEvent,paymentMarkedPaid:com.jccv.tuprivadaapp.dto.events.payment.PaymentMarkedAsPaidEvent,chargeCreated:com.jccv.tuprivadaapp.dto.events.charge.ChargeCreatedEvent"
+
+    listener:
+      ack-mode: record

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "deposit_payments", indexes = {
-        @Index(name = "idx_deposit_date", columnList = "depositDate")
+        @Index(name = "idx_deposit_payments_deposit_date", columnList = "depositDate")
 })
 public class DepositPayment {
 

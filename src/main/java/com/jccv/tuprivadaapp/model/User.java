@@ -21,7 +21,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "users")
-@JsonIgnoreProperties(value = {"condominium"})
+@JsonIgnoreProperties(value = {"condominium", "hibernateLazyInitializer", "handler"})
 public class User implements UserDetails {
 
     @Id

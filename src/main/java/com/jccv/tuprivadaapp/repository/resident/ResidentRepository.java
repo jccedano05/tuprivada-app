@@ -66,4 +66,6 @@ List<ResidentChargeSummaryDto> getAllResidentsChargesSummariesByCondominiumId(
         @Param("condominiumId") Long condominiumId
 );
 
+    Long countByCondominiumId(Long condominiumId);
+
 }

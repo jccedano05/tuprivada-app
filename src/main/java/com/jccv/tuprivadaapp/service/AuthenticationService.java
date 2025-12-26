@@ -206,6 +206,25 @@ public class AuthenticationService {
         return user;
     }
 
+    private void applyContactInfo(User user, String phone, String countryCode) {
+        try {
+            String normalizedPhone = ContactInfoValidator.normalizePhone(phone);
+            String normalizedCountryCode = ContactInfoValidator.normalizeCountryCode(countryCode);
+
+            if (user.getId() != null) {
+                log.info("Actualizando información de contacto para userId={}", user.getId());
+            } else {
+                log.info("Asignando información de contacto para username={}", user.getUsername());
+            }
+
+            user.setPhone(normalizedPhone);
+            user.setCountryCode(normalizedCountryCode);
+        } catch (BadRequestException ex) {
+            log.warn("Validación de contacto fallida para username={}: {}", user.getUsername(), ex.getMessage());
+            throw ex;
+        }
+    }
+
 
     public AuthenticatedUserDto authenticate(User request) {
         authenticationManager.authenticate(
