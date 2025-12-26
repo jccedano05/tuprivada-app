@@ -4,11 +4,13 @@ import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationReques
 import com.jccv.tuprivadaapp.dto.charge.AnnualChargeSummaryDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeDto;
 import com.jccv.tuprivadaapp.dto.charge.ChargeSummaryDto;
+import com.jccv.tuprivadaapp.dto.events.charge.ChargeCreatedEvent;
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
+import com.jccv.tuprivadaapp.messaging.notification.NotificationEventProducer;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.resident.Resident;
@@ -17,6 +19,8 @@ import com.jccv.tuprivadaapp.service.payment.PaymentService;
 import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationService;
 import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,19 +33,23 @@ import java.util.List;
 @RequestMapping("api/charges")
 public class ChargeController {
 
+    private static final Logger log = LoggerFactory.getLogger(ChargeController.class);
+
     private final ResidentService residentService;
     private final ChargeService chargeService;
     private final PaymentService paymentService;
     private final OneSignalPushNotificationService oneSignalPushNotificationService;
     private final PollingNotificationService pollingNotificationService;
+    private final NotificationEventProducer notificationEventProducer;
 
     @Autowired
-    public ChargeController(ResidentService residentService, ChargeService chargeService, PaymentService paymentService, OneSignalPushNotificationService oneSignalPushNotificationService, PollingNotificationService pollingNotificationService) {
+    public ChargeController(ResidentService residentService, ChargeService chargeService, PaymentService paymentService, OneSignalPushNotificationService oneSignalPushNotificationService, PollingNotificationService pollingNotificationService, NotificationEventProducer notificationEventProducer) {
         this.residentService = residentService;
         this.chargeService = chargeService;
         this.paymentService = paymentService;
         this.oneSignalPushNotificationService = oneSignalPushNotificationService;
         this.pollingNotificationService = pollingNotificationService;
+        this.notificationEventProducer = notificationEventProducer;
     }
 
     @PostMapping("/apply")
@@ -67,6 +75,22 @@ public class ChargeController {
                     .message("El cargo '" + charge.getDescription() + "' ya esta disponible para pagar")
                     .read(false)
                     .build());
+
+            try {
+                ChargeCreatedEvent event = new ChargeCreatedEvent(
+                        charge.getId(),
+                        charge.getTitleTypePayment(),
+                        charge.getDescription(),
+                        charge.getAmount(),
+                        chargeRequestDto.getResidentIds()
+                );
+                notificationEventProducer.publishChargeCreated(event);
+                log.info("Evento ChargeCreatedEvent publicado a Kafka para chargeId={}, eventId={}",
+                        charge.getId(), event.getEventId());
+            } catch (Exception kafkaEx) {
+                log.error("Error publicando evento a Kafka para chargeId={}. Continuando con flujo normal.",
+                        charge.getId(), kafkaEx);
+            }
 
             oneSignalPushNotificationService.sendPushToResidentsList(chargeRequestDto.getResidentIds(),PushNotificationRequest.builder()
                     .title("Nuevo cargo")

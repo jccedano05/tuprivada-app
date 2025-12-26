@@ -96,6 +96,7 @@ public class ChargeServiceImp implements ChargeService {
 
     @Override
     public List<ChargeSummaryDto> getChargesByCondominiumIdAndDateRange(Long condominiumId, LocalDateTime startDate, LocalDateTime endDate) {
+
         List<Charge> charges = chargeRepository.findByCondominiumIdAndChargeDateBetweenAndIsActiveTrueOrderByChargeDateDesc(condominiumId, startDate, endDate);
         List<ChargeSummaryDto> chargeSummaryDtos = new ArrayList<>();
 

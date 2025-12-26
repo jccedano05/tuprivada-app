@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.controller.stripe;
 
 
+import com.jccv.tuprivadaapp.dto.stripe.StripeOxxoVoucherResponse;
 import com.jccv.tuprivadaapp.dto.stripe.StripePaymentIntentResponse;
 import com.jccv.tuprivadaapp.dto.stripe.StripePaymentRequest;
 import com.jccv.tuprivadaapp.exception.StripeServiceException;
@@ -29,9 +30,26 @@ public class StripePaymentsController {
             StripePaymentIntentResponse paymentIntent = stripePaymentsService.createPaymentCardIntent(request);
             return new ResponseEntity<>(paymentIntent, HttpStatus.OK);
         }catch (StripeServiceException e){
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PostMapping("/create-oxxo-intent")
+    public ResponseEntity<?> createOxxoIntent(@RequestBody StripePaymentRequest req) {
+        try{
+            StripeOxxoVoucherResponse urlOxxoVoucher = stripePaymentsService.createPaymentOxxoIntent(req);
+        return ResponseEntity.ok(urlOxxoVoucher);
+    }catch (StripeServiceException e){
+        e.printStackTrace();
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }catch (Exception e){
+        e.printStackTrace();
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    }
+
 }

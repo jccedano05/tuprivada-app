@@ -5,6 +5,7 @@ import com.jccv.tuprivadaapp.repository.auth.facade.UserFacade;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import software.amazon.awssdk.services.ses.SesClient;
@@ -32,6 +33,7 @@ public class EmailService {
         this.templateEngine = templateEngine;
     }
 
+    @Async
     public void sendHtmlEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         // Procesar template Thymeleaf
         Context context = new Context();

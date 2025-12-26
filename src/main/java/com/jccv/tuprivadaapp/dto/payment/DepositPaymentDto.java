@@ -16,4 +16,5 @@ public class DepositPaymentDto {
     private String description;
     private String title;
     private LocalDateTime depositDate;
+    private Boolean isDepositAddedSelected;
 }

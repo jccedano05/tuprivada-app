@@ -1,5 +1,6 @@
 package com.jccv.tuprivadaapp.controller.finance;
 
+import com.jccv.tuprivadaapp.dto.finance.FinanceDetailBatchRequestDto;
 import com.jccv.tuprivadaapp.dto.finance.FinanceDetailDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
@@ -32,6 +33,24 @@ public class FinanceDetailController {
         try {
             FinanceDetailDto createdFinanceDetail = financeDetailService.createFinanceDetail(financeDetailDto);
             return new ResponseEntity<>(createdFinanceDetail, HttpStatus.CREATED);
+        } catch (BadRequestException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<?> createFinanceDetailsBatch(@RequestBody FinanceDetailBatchRequestDto requestDto) {
+        try {
+            List<FinanceDetailDto> createdDetails = financeDetailService.createFinanceDetails(
+                    requestDto.getFinanceId(),
+                    requestDto.getCategoryId(),
+                    requestDto.getDetails()
+            );
+            return new ResponseEntity<>(createdDetails, HttpStatus.CREATED);
         } catch (BadRequestException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (ResourceNotFoundException e) {

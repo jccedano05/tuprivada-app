@@ -60,6 +60,24 @@ public class PaymentController {
        }
     }
 
+    @DeleteMapping("/{paymentId}")
+    public ResponseEntity<?> deletePaymentByChargeIdAndResidentIdV2(
+            @PathVariable Long paymentId) {
+        try{
+            paymentService.deletePaymentByPaymentId(paymentId);
+            return new ResponseEntity<>("Cobro a residente borrado correctamente", HttpStatus.NO_CONTENT);
+        }
+        catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        catch (BadRequestException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GetMapping
     public ResponseEntity<?> getAllPayments() {
         try{

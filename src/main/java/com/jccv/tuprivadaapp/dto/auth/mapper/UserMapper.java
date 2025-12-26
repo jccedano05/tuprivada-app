@@ -24,6 +24,9 @@ public class UserMapper {
                 .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .username(user.getUsername())
+                .phone(user.getPhone())
+                .countryCode(user.getCountryCode())
                 .bankPersonalReference(user.getBankPersonalReference())
                 .email(user.getEmail())
                 .role(user.getRole());
@@ -41,6 +44,9 @@ public class UserMapper {
                 .id(userDto.getId())
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
+                .username(userDto.getUsername())
+                .phone(userDto.getPhone())
+                .countryCode(userDto.getCountryCode())
                 .bankPersonalReference(userDto.getBankPersonalReference())
                 .email(userDto.getEmail())
                 .role(userDto.getRole()).build();
@@ -62,6 +68,7 @@ public class UserMapper {
                 .condominium(user.getCondominium())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .phone(user.getPhone())
                 .bankPersonalReference(user.getBankPersonalReference())
                 .build();
     }

@@ -2,6 +2,7 @@ package com.jccv.tuprivadaapp.service.payment.implementation;
 
 import com.jccv.tuprivadaapp.dto.payment.DepositPaymentDto;
 import com.jccv.tuprivadaapp.dto.payment.mapper.DepositPaymentMapper;
+import com.jccv.tuprivadaapp.dto.transaction.DepositDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
 import com.jccv.tuprivadaapp.model.charge.Charge;
@@ -9,10 +10,13 @@ import com.jccv.tuprivadaapp.model.payment.DepositPayment;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.receipt.Receipt;
 import com.jccv.tuprivadaapp.model.resident.Resident;
+import com.jccv.tuprivadaapp.model.transaction.Deposit;
 import com.jccv.tuprivadaapp.repository.payment.DepositPaymentRepository;
 import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
+import com.jccv.tuprivadaapp.repository.transaction.DepositRepository;
 import com.jccv.tuprivadaapp.service.payment.DepositPaymentService;
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
+import com.jccv.tuprivadaapp.service.transaction.DepositService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +39,9 @@ public class DepositPaymentServiceImp implements DepositPaymentService {
 
     @Autowired
     private ResidentService residentService;
+
+    @Autowired
+    private DepositRepository depositRepository;
 
 //    @Override
 //    public DepositPaymentDTO addDeposit(Long paymentId, DepositPaymentDTO depositPaymentDTO) {
@@ -71,8 +78,19 @@ public class DepositPaymentServiceImp implements DepositPaymentService {
         Resident resident = payment.getResident();
         double depositAmount = depositPaymentDTO.getAmount();
 
-        if (resident.getBalance() < depositAmount) {
+        if (resident.getBalance() < depositAmount && !depositPaymentDTO.getIsDepositAddedSelected()) {
             throw new BadRequestException("Saldo insuficiente en la cuenta del residente para realizar el depósito");
+        }
+        if(depositPaymentDTO.getIsDepositAddedSelected()){
+            Deposit deposit = Deposit.builder()
+                    .issuingBank("Sin banco")
+                    .resident(resident)
+                    .balanceAfterDeposit(resident.getBalance())
+                    .bankTrackingKey("Sin referencia")
+                    .amount(depositPaymentDTO.getAmount())
+                    .depositDate(depositPaymentDTO.getDepositDate())
+                    .build();
+            depositRepository.save(deposit);
         }
 
         // Calculamos el total de abonos (depositos) realizados para este Payment
@@ -103,7 +121,10 @@ public class DepositPaymentServiceImp implements DepositPaymentService {
 
 
         // Actualizamos el balance del residente restando el monto del depósito
-        residentService.updateBalanceResident(resident, -depositAmount);
+        if(!depositPaymentDTO.getIsDepositAddedSelected()){
+
+            residentService.updateBalanceResident(resident, -depositAmount);
+        }
 
         return depositPaymentMapper.toDTO(savedDeposit);
     }

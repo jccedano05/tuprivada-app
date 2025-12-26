@@ -12,4 +12,6 @@ public class TuprivadaAppApplication {
 		SpringApplication.run(TuprivadaAppApplication.class, args);
 	}
 
+
+
 }

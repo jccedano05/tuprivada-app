@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pago Duplicado</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; }
+    .header { background-color: #E66600; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }
+    .content { padding: 20px; }
+    .footer { padding: 15px; text-align: center; color: #888; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Pago Duplicado Detectado</h1>
+  </div>
+  <div class="content">
+    <p>Hola <span th:text="${nombre}">nombre</span>,</p>
+    <p>Hemos detectado que realizaste un pago adicional para un concepto ya liquidado.</p>
+    <p>Este monto se ha abonado a tu saldo disponible.</p>
+    <p>Por favor, contacta con la administración para más información o para solicitar el uso de ese saldo.</p>
+  </div>
+  <div class="footer">
+    <p>Ayni Comunidad · 2025</p>
+  </div>
+</div>
+</body>
+</html>

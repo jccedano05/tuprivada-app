@@ -1,16 +1,20 @@
 package com.jccv.tuprivadaapp.service.payment.implementation;
 
 import com.jccv.tuprivadaapp.controller.pushNotifications.PushNotificationRequest;
+import com.jccv.tuprivadaapp.dto.events.payment.PaymentMarkedAsPaidEvent;
 import com.jccv.tuprivadaapp.dto.payment.*;
 import com.jccv.tuprivadaapp.dto.payment.mapper.PaymentMapper;
 import com.jccv.tuprivadaapp.dto.pollingNotification.PollingNotificationDto;
 import com.jccv.tuprivadaapp.exception.BadRequestException;
 import com.jccv.tuprivadaapp.exception.ResourceNotFoundException;
+import com.jccv.tuprivadaapp.messaging.notification.NotificationEventProducer;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import com.jccv.tuprivadaapp.model.receipt.Receipt;
 import com.jccv.tuprivadaapp.model.resident.Resident;
+import com.jccv.tuprivadaapp.model.transaction.Deposit;
 import com.jccv.tuprivadaapp.repository.payment.PaymentRepository;
+import com.jccv.tuprivadaapp.repository.transaction.DepositRepository;
 import com.jccv.tuprivadaapp.service.charge.ChargeService;
 import com.jccv.tuprivadaapp.service.payment.DepositPaymentService;
 import com.jccv.tuprivadaapp.service.payment.PaymentService;
@@ -18,6 +22,8 @@ import com.jccv.tuprivadaapp.service.pollingNotification.PollingNotificationServ
 import com.jccv.tuprivadaapp.service.resident.ResidentService;
 
 import com.jccv.tuprivadaapp.service.pushNotifications.OneSignalPushNotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -37,6 +43,8 @@ import java.util.stream.Stream;
 @Service
 public class PaymentServiceImp implements PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentServiceImp.class);
+
     private final PaymentRepository paymentRepository;
 
     private final PaymentMapper paymentMapper;
@@ -50,8 +58,12 @@ public class PaymentServiceImp implements PaymentService {
     private final OneSignalPushNotificationService oneSignalPushNotificationService;
 
 
+    private final DepositRepository depositRepository;
+
+    private final NotificationEventProducer notificationEventProducer;
+
     @Autowired
-    public PaymentServiceImp(OneSignalPushNotificationService oneSignalPushNotificationService , PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, @Lazy ChargeService chargeService, DepositPaymentService depositPaymentService, PollingNotificationService pollingNotificationService) {
+    public PaymentServiceImp(OneSignalPushNotificationService oneSignalPushNotificationService , PaymentRepository paymentRepository, PaymentMapper paymentMapper, ResidentService residentService, @Lazy ChargeService chargeService, DepositPaymentService depositPaymentService, PollingNotificationService pollingNotificationService, DepositRepository depositRepository, NotificationEventProducer notificationEventProducer) {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
         this.residentService = residentService;
@@ -59,6 +71,8 @@ public class PaymentServiceImp implements PaymentService {
         this.depositPaymentService = depositPaymentService;
         this.pollingNotificationService = pollingNotificationService;
         this.oneSignalPushNotificationService = oneSignalPushNotificationService;
+        this.depositRepository = depositRepository;
+        this.notificationEventProducer = notificationEventProducer;
     }
 
     @Override
@@ -133,6 +147,20 @@ public class PaymentServiceImp implements PaymentService {
     }
 
 
+    @Override
+    @Transactional
+    public void deletePaymentByPaymentId(Long paymentId){
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> new ResourceNotFoundException("Payment not found for paymentId: "
+                + paymentId));
+        if(payment.isPaid()){
+            residentService.updateBalanceResident(payment.getResident().getId(), payment.getCharge().getAmount());
+            depositPaymentService.deleteAllDepositsByPaymentId(payment.getId());
+        }else{
+            depositPaymentService.deleteAllDepositsWithBalanceUpdateByPaymentId(payment.getId(), payment.getResident());
+        }
+        paymentRepository.delete(payment);
+    }
+
 
     @Override
     @Transactional
@@ -195,7 +223,7 @@ public class PaymentServiceImp implements PaymentService {
         double totalDepositsPayment = depositPaymentService.getTotalDepositsAmountByPaymentId(payment.getId());
 
         double balanceAfterPaid = resident.getBalance() - payment.getCharge().getAmount() + totalDepositsPayment;
-        if(paymentCompletedDto.getIsPaid() && balanceAfterPaid < 0){
+        if(paymentCompletedDto.getIsPaid() && balanceAfterPaid < 0 && !paymentCompletedDto.getIsDepositAddedSelected()){
             throw new BadRequestException("Saldo insuficiente para hacer el pago");
         }
         LocalDateTime date  = paymentCompletedDto.getDatePaid() != null ? paymentCompletedDto.getDatePaid() : LocalDateTime.now();
@@ -203,6 +231,18 @@ public class PaymentServiceImp implements PaymentService {
         payment.setDatePaid(paymentCompletedDto.getIsPaid() ? date : null);
         paymentRepository.save(payment);
 
+
+        if(paymentCompletedDto.getIsDepositAddedSelected() && paymentCompletedDto.getIsPaid()){
+            Deposit deposit = Deposit.builder()
+                    .issuingBank("Sin banco")
+                    .resident(resident)
+                    .balanceAfterDeposit(resident.getBalance())
+                    .bankTrackingKey("Sin referencia")
+                    .amount( payment.getCharge().getAmount() - totalDepositsPayment)
+                    .depositDate(paymentCompletedDto.getDatePaid())
+                    .build();
+            depositRepository.save(deposit);
+        }
 
         double newBalance = 0;
         if(lastPayment != paymentCompletedDto.getIsPaid()){
@@ -217,6 +257,25 @@ public class PaymentServiceImp implements PaymentService {
                    .read(false)
                    .build());
 
+            try {
+                PaymentMarkedAsPaidEvent event = new PaymentMarkedAsPaidEvent(
+                        payment.getId(),
+                        resident.getId(),
+                        resident.getUser().getId(),
+                        resident.getUser().getEmail(),
+                        resident.getUser().getFirstName(),
+                        charge.getTitleTypePayment(),
+                        charge.getDescription(),
+                        payment.getCharge().getAmount() - totalDepositsPayment
+                );
+                notificationEventProducer.publishPaymentMarkedAsPaid(event);
+                log.info("Evento PaymentMarkedAsPaidEvent publicado a Kafka para paymentId={}, eventId={}",
+                        payment.getId(), event.getEventId());
+            } catch (Exception kafkaEx) {
+                log.error("Error publicando evento a Kafka para paymentId={}. Continuando con flujo normal.",
+                        payment.getId(), kafkaEx);
+            }
+
             oneSignalPushNotificationService.sendPushToUser(PushNotificationRequest.builder()
                     .title("Pago Exitoso.!")
                     .message(charge.getTitleTypePayment())
@@ -225,7 +284,10 @@ public class PaymentServiceImp implements PaymentService {
        }else{
              newBalance += payment.getCharge().getAmount() - totalDepositsPayment;
        }
-        residentService.updateBalanceResident(resident, newBalance);
+        if(!paymentCompletedDto.getIsDepositAddedSelected()){
+
+            residentService.updateBalanceResident(resident, newBalance);
+        }
         }
     }
 

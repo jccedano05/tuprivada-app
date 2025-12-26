@@ -8,7 +8,5 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class UserUpdateByAdminDto extends UserUpdateDto{
-    private String firstName;
-    private String lastName;
     private Role role;
 }

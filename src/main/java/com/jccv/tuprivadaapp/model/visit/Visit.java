@@ -3,6 +3,7 @@ package com.jccv.tuprivadaapp.model.visit;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.jccv.tuprivadaapp.model.User;
+import com.jccv.tuprivadaapp.model.condominium.Condominium;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -38,6 +39,7 @@ public class Visit {
     @Column(name = "qr_token", unique = true)
     private String qrToken;
 
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private VisitStatus status;
@@ -45,5 +47,9 @@ public class Visit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "condominium_id")
+    private Condominium condominium;
 }
 

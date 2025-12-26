@@ -1,7 +1,6 @@
 package com.jccv.tuprivadaapp.model.payment;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "deposit_payments", indexes = {
-        @Index(name = "idx_deposit_date", columnList = "depositDate")
+        @Index(name = "idx_deposit_payments_deposit_date", columnList = "depositDate")
 })
 public class DepositPayment {
 
@@ -34,14 +33,10 @@ public class DepositPayment {
     private LocalDateTime depositDate;
 
     // Relación ManyToOne con Payment (un Payment puede tener muchos abonos)
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "payment_id", nullable = false)
-//    @ToString.Exclude
-//    private Payment payment;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonBackReference
+    @JsonIgnore
     @ToString.Exclude
     private Payment payment;
 }

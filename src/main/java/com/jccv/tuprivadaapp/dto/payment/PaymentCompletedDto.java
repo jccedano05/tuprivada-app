@@ -15,4 +15,5 @@ public class PaymentCompletedDto {
     private Long paymentId;
     private LocalDateTime datePaid;
     private Boolean isPaid;
+    private Boolean isDepositAddedSelected;
 }

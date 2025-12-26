@@ -28,22 +28,44 @@ public interface ResidentRepository extends JpaRepository<Resident, Long> {
     List<Resident> findAllByCondominiumIdAndIsActiveResidentTrueOrderByStreetAndExtNumberIgnoreCase(Long condominiumId);
 
 
-    @Query("SELECT new com.jccv.tuprivadaapp.dto.resident.ResidentChargeSummaryDto(" +
-            "  r.id,                                         " + // residentId
-            "  r.user.firstName,                             " + // firstName
-            "  r.user.lastName,                              " + // lastName
-            "  COALESCE(ar.street, ''),                      " + // street (puede ser NULL)
-            "  COALESCE(ar.extNumber, ''),                   " + // extNumber (puede ser NULL)
-            "  SUM(CASE WHEN p.isPaid = true  AND p.isDeleted = false THEN 1 ELSE 0 END),  " + // paidPayments → Long
-            "  SUM(CASE WHEN p.isPaid = false AND p.isDeleted = false THEN 1 ELSE 0 END),  " + // unpaidPayments → Long
-            "  SUM(CASE WHEN p.isPaid = false AND p.isDeleted = false THEN p.charge.amount ELSE 0 END) " + // totalDue → Double
-            ") " +
-            "FROM Resident r " +
-            "LEFT JOIN r.addressResident ar   " +  // residente puede no tener dirección
-            "LEFT JOIN r.payments p           " +  // residente puede no tener pagos aún
-            "WHERE r.condominium.id = :condominiumId " +  // filtramos por condominio
-            "GROUP BY r.id, r.user.firstName, r.user.lastName, ar.street, ar.extNumber")
-    List<ResidentChargeSummaryDto> getAllResidentsChargesSummariesByCondominiumId(
-            @Param("condominiumId") Long condominiumId
-    );
+//    @Query("SELECT new com.jccv.tuprivadaapp.dto.resident.ResidentChargeSummaryDto(" +
+//            "  r.id,                                         " + // residentId
+//            "  r.user.firstName,                             " + // firstName
+//            "  r.user.lastName,                              " + // lastName
+//            "  COALESCE(ar.street, ''),                      " + // street (puede ser NULL)
+//            "  COALESCE(ar.extNumber, ''),                   " + // extNumber (puede ser NULL)
+//            "  SUM(CASE WHEN p.isPaid = true  AND p.isDeleted = false THEN 1 ELSE 0 END),  " + // paidPayments → Long
+//            "  SUM(CASE WHEN p.isPaid = false AND p.isDeleted = false THEN 1 ELSE 0 END),  " + // unpaidPayments → Long
+//            "  SUM(CASE WHEN p.isPaid = false AND p.isDeleted = false THEN p.charge.amount ELSE 0 END) " + // totalDue → Double
+//            ") " +
+//            "FROM Resident r " +
+//            "LEFT JOIN r.addressResident ar   " +  // residente puede no tener dirección
+//            "LEFT JOIN r.payments p           " +  // residente puede no tener pagos aún
+//            "WHERE r.condominium.id = :condominiumId " +  // filtramos por condominio
+//            "GROUP BY r.id, r.user.firstName, r.user.lastName, ar.street, ar.extNumber")
+//    List<ResidentChargeSummaryDto> getAllResidentsChargesSummariesByCondominiumId(
+//            @Param("condominiumId") Long condominiumId
+//    );
+@Query("SELECT new com.jccv.tuprivadaapp.dto.resident.ResidentChargeSummaryDto(" +
+        "  r.id,                                         " + // residentId
+        "  r.user.firstName,                             " + // firstName
+        "  r.user.lastName,                              " + // lastName
+        "  COALESCE(ar.street, ''),                      " + // street (puede ser NULL)
+        "  COALESCE(ar.extNumber, ''),                   " + // extNumber (puede ser NULL)
+        "  SUM(CASE WHEN p.isPaid = true  AND p.isDeleted = false THEN 1 ELSE 0 END),  " + // paidPayments
+        "  SUM(CASE WHEN p.isPaid = false AND p.isDeleted = false THEN 1 ELSE 0 END),  " + // unpaidPayments
+        "  SUM(CASE WHEN p.isPaid = false AND p.isDeleted = false THEN p.charge.amount ELSE 0 END), " + // totalDue
+        "  COALESCE(r.balance, 0.0)                                    " + // ✅ balance directamente desde Resident
+        ") " +
+        "FROM Resident r " +
+        "LEFT JOIN r.addressResident ar " +
+        "LEFT JOIN r.payments p " +
+        "WHERE r.condominium.id = :condominiumId " +
+        "GROUP BY r.id, r.user.firstName, r.user.lastName, ar.street, ar.extNumber, r.balance")
+List<ResidentChargeSummaryDto> getAllResidentsChargesSummariesByCondominiumId(
+        @Param("condominiumId") Long condominiumId
+);
+
+    Long countByCondominiumId(Long condominiumId);
+
 }
