@@ -1,0 +1,19 @@
+meta {
+  name: Reauth Account
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/api/stripe/reauth?accountId=acct_xxxxxxxxxxxxx
+  body: none
+  auth: bearer
+}
+
+params:query {
+  accountId: acct_xxxxxxxxxxxxx
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

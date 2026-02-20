@@ -235,6 +235,12 @@ public class PaymentServiceImp implements PaymentService {
     }
 
     @Override
+    public PaymentDetailsSummaryDto getPaymentDetailsSummary(Long paymentId) {
+        return paymentRepository.findPaymentDetailsSummaryById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
+    }
+
+    @Override
     @Transactional
     public void logicalDeletePaymentsByChargeId(Long chargeId) {
         paymentRepository.markPaymentsAsDeletedByChargeId(chargeId);
@@ -254,6 +260,12 @@ public class PaymentServiceImp implements PaymentService {
         // Realizar el borrado lógico, marcando el pago como eliminado
         payment.setDeleted(true);
         paymentRepository.save(payment);
+    }
+    
+    @Override
+    public Payment getPaymentEntityById(Long id) {
+        return paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
     }
 
 

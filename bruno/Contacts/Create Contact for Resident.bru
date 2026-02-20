@@ -1,0 +1,25 @@
+meta {
+  name: Create Contact for Resident
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/contacts/residents
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "residentId": {{resident_id}},
+    "name": "Juan Pérez",
+    "phone": "+525512345678",
+    "email": "juan.perez@example.com",
+    "relationship": "Familiar"
+  }
+}

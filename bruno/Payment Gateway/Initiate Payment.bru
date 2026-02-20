@@ -1,0 +1,38 @@
+meta {
+  name: Initiate Payment
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/initiate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  // OPCIÓN 1: Pago con OXXO
+  {
+    "paymentId": {{payment_id}},
+    "paymentMethod": "OXXO",
+    "email": "cliente@example.com",
+    "provider": "CONEKTA",
+    "expiresInDays": 3,
+    "ipAddress": "192.168.1.100"
+  }
+  
+  // OPCIÓN 2: Pago con Tarjeta (requiere token de Conekta.js)
+  // {
+  //   "paymentId": {{payment_id}},
+  //   "paymentMethod": "CARD",
+  //   "email": "cliente@example.com",
+  //   "provider": "CONEKTA",
+  //   "cardToken": "tok_test_visa_4242",
+  //   "deviceFingerprint": "{{device_fingerprint}}",
+  //   "ipAddress": "192.168.1.100"
+  // }
+}

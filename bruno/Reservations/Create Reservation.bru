@@ -1,0 +1,26 @@
+meta {
+  name: Create Reservation
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/reservations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "amenityId": 1,
+    "residentId": {{resident_id}},
+    "reservationDate": "2026-02-15",
+    "startTime": "10:00:00",
+    "endTime": "12:00:00",
+    "notes": "Reserva para evento familiar"
+  }
+}

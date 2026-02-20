@@ -1,6 +1,7 @@
 package com.jccv.tuprivadaapp.repository.payment;
 
 import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsDto;
+import com.jccv.tuprivadaapp.dto.payment.PaymentDetailsSummaryDto;
 import com.jccv.tuprivadaapp.dto.payment.PaymentResidentDetailsDto;
 import com.jccv.tuprivadaapp.model.payment.Payment;
 import org.springframework.data.domain.Page;
@@ -167,8 +168,45 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 """)
     Double getRemainingAmountByPaymentId(@Param("paymentId") Long paymentId);
 
+    @Query("SELECT p FROM Payment p " +
+           "LEFT JOIN FETCH p.resident r " +
+           "LEFT JOIN FETCH r.condominium " +
+           "WHERE p.id = :paymentId")
+    Optional<Payment> findByIdWithResidentAndCondominium(@Param("paymentId") Long paymentId);
 
-
+    @Query("""
+        SELECT new com.jccv.tuprivadaapp.dto.payment.PaymentDetailsSummaryDto(
+            p.id,
+            p.isPaid,
+            p.isDeleted,
+            p.datePaid,
+            (c.amount - COALESCE((SELECT SUM(dp.amount) FROM DepositPayment dp WHERE dp.payment.id = p.id), 0)),
+            c.id,
+            c.titleTypePayment,
+            c.amount,
+            c.description,
+            c.chargeDate,
+            c.dueDate,
+            c.penaltyValue,
+            r.id,
+            r.user.firstName,
+            r.user.lastName,
+            r.addressResident.street,
+            r.addressResident.extNumber,
+            r.addressResident.intNumber,
+            r.balance,
+            cond.id,
+            cond.name
+        )
+        FROM Payment p
+        JOIN p.charge c
+        JOIN p.resident r
+        JOIN r.user u
+        JOIN r.addressResident addr
+        JOIN r.condominium cond
+        WHERE p.id = :paymentId
+    """)
+    Optional<PaymentDetailsSummaryDto> findPaymentDetailsSummaryById(@Param("paymentId") Long paymentId);
 
 }
 

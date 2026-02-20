@@ -1,0 +1,19 @@
+meta {
+  name: Get Resident by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/residents/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{resident_id}}
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

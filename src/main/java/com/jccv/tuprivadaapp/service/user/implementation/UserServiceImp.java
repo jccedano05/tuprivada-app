@@ -47,5 +47,19 @@ public class UserServiceImp implements UserService {
 
     }
 
+    @Override
+    public String getUserBankPersonalReference(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + userId));
+        
+        // Si el usuario no tiene referencia bancaria, usar su ID como fallback
+        String reference = user.getBankPersonalReference();
+        if (reference == null || reference.isEmpty()) {
+            reference = "USR_" + userId;
+        }
+        
+        return reference;
+    }
+
 }
 

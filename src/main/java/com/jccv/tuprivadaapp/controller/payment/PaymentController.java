@@ -81,6 +81,21 @@ public class PaymentController {
         }
     }
 
+    @PreAuthorize(USER_LEVEL)
+    @GetMapping("/{id}/details")
+    public ResponseEntity<?> getPaymentDetailsSummary(@PathVariable Long id) {
+        try{
+            PaymentDetailsSummaryDto details = paymentService.getPaymentDetailsSummary(id);
+            return new ResponseEntity<>(details, HttpStatus.OK);
+        }
+        catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePayment(@PathVariable Long id, @RequestBody PaymentDto paymentDto) {
         try{

@@ -1,0 +1,27 @@
+meta {
+  name: Update Contact
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{base_url}}/contacts/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 1
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "name": "Juan Pérez García",
+    "phone": "+525512345679",
+    "email": "juan.perez.updated@example.com"
+  }
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Refresh Account Link
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/stripe/refresh?accountId=acct_xxxxxxxxxxxxx
+  body: none
+  auth: bearer
+}
+
+params:query {
+  accountId: acct_xxxxxxxxxxxxx
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

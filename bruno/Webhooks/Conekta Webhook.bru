@@ -1,0 +1,39 @@
+meta {
+  name: Conekta Webhook
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/webhooks/conekta
+  body: json
+  auth: none
+}
+
+headers {
+  Conekta-Signature: test_signature_xxxxx
+}
+
+body:json {
+  {
+    "livemode": false,
+    "type": "order.paid",
+    "data": {
+      "object": {
+        "id": "ord_2tYZ1jGw7bYZ1jGw7",
+        "amount": 150000,
+        "currency": "MXN",
+        "payment_status": "paid",
+        "charges": {
+          "data": [
+            {
+              "id": "chrg_2tYZ1jGw7bYZ1jGw7",
+              "amount": 150000,
+              "status": "paid"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

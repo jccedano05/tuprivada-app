@@ -1,0 +1,26 @@
+meta {
+  name: Confirm Payment
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/payment/:transactionReference/confirm
+  body: json
+  auth: bearer
+}
+
+params:path {
+  transactionReference: TXN_123456
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "paymentMethodId": "pm_card_visa",
+    "savePaymentMethod": false
+  }
+}

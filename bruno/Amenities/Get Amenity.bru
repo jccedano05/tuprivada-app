@@ -1,0 +1,19 @@
+meta {
+  name: Get Amenity
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/amenities/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: 1
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

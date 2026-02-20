@@ -1,0 +1,27 @@
+meta {
+  name: Create Gateway Account
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/accounts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "condominiumId": {{condominium_id}},
+    "provider": "CONEKTA",
+    "publicKey": "key_xxxxxxxxxxxxxx",
+    "privateKey": "key_xxxxxxxxxxxxxx",
+    "webhookSecret": "webhook_secret_xxxxx",
+    "isActive": true,
+    "commissionPercentage": 3.6
+  }
+}

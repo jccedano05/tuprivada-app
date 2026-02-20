@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jccv.tuprivadaapp.model.charge.Charge;
 import com.jccv.tuprivadaapp.model.resident.Resident;
+import com.jccv.tuprivadaapp.model.payment.gateway.PaymentTransaction;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -61,4 +62,9 @@ public class Payment {
     @JsonManagedReference
     @ToString.Exclude
     private List<StripePaymentIntent> stripePaymentIntents;
+
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<PaymentTransaction> gatewayTransactions;
 }

@@ -1,0 +1,19 @@
+meta {
+  name: Get Resident Balance
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/residents/balance/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{resident_id}}
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

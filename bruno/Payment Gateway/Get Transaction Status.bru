@@ -1,0 +1,19 @@
+meta {
+  name: Get Transaction Status
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/payment/:transactionReference/status
+  body: none
+  auth: bearer
+}
+
+params:path {
+  transactionReference: TXN_123456
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

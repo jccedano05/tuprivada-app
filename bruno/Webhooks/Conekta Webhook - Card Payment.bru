@@ -1,0 +1,109 @@
+meta {
+  name: Conekta Webhook - Card Payment
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/webhooks/conekta
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Conekta-Signature: {{webhook_signature}}
+}
+
+body:json {
+  {
+    "id": "evt_2tYqGJBkKqJsVH5Zb",
+    "type": "charge.paid",
+    "created_at": 1706286100,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "ord_2tYqGJBkKqJsVH5Zc",
+        "object": "order",
+        "created_at": 1706286000,
+        "updated_at": 1706286100,
+        "amount": 75000,
+        "amount_refunded": 0,
+        "payment_status": "paid",
+        "currency": "MXN",
+        "metadata": {
+          "transactionReference": "TXN-20260126-DEF456",
+          "condominiumId": "1",
+          "paymentId": "123"
+        },
+        "customer_info": {
+          "customer_id": "cus_2tYqGJBkKqJsVH5Zd",
+          "name": "María García",
+          "email": "maria.garcia@example.com",
+          "phone": "5559876543"
+        },
+        "line_items": {
+          "data": [{
+            "id": "line_2tYqGJBkKqJsVH5Ze",
+            "object": "line_item",
+            "name": "Cuota extraordinaria",
+            "unit_price": 75000,
+            "quantity": 1,
+            "parent_id": "ord_2tYqGJBkKqJsVH5Zc"
+          }]
+        },
+        "charges": {
+          "data": [{
+            "id": "chrg_2tYqGJBkKqJsVH5Zf",
+            "object": "charge",
+            "created_at": 1706286000,
+            "currency": "MXN",
+            "amount": 75000,
+            "payment_method": {
+              "type": "card",
+              "name": "María García",
+              "exp_month": "12",
+              "exp_year": "26",
+              "auth_code": "123456",
+              "last4": "4242",
+              "brand": "visa",
+              "issuer": "BANAMEX",
+              "account_type": "CREDIT",
+              "country": "MX"
+            },
+            "status": "paid",
+            "paid_at": 1706286100,
+            "fee": 2465,
+            "customer_id": "cus_2tYqGJBkKqJsVH5Zd"
+          }]
+        }
+      }
+    },
+    "webhook_status": "pending"
+  }
+}
+
+docs {
+  # Webhook de Conekta - Pago con Tarjeta
+  
+  Este endpoint recibe notificaciones cuando un pago con tarjeta se procesa exitosamente.
+  
+  ## Diferencias con OXXO:
+  - El pago con tarjeta es inmediato (no hay período de espera)
+  - El evento `charge.paid` se envía inmediatamente después del pago
+  - Incluye información adicional como `auth_code` y detalles de la tarjeta
+  
+  ## Validación de firma:
+  La firma se valida comparando el header `X-Conekta-Signature` con un HMAC-SHA256
+  calculado usando la clave configurada en `conekta.webhook-key`.
+  
+  ## Respuesta esperada:
+  ```json
+  {
+    "eventType": "charge.paid",
+    "transactionReference": "TXN-20260126-DEF456",
+    "processed": true,
+    "message": "Webhook procesado y estado actualizado correctamente"
+  }
+  ```
+}

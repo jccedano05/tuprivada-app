@@ -1,0 +1,19 @@
+meta {
+  name: Get Resident DTO
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/residents/dto/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{resident_id}}
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

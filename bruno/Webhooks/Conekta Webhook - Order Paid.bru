@@ -1,0 +1,102 @@
+meta {
+  name: Conekta Webhook - Order Paid
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/webhooks/conekta
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Conekta-Signature: {{webhook_signature}}
+}
+
+body:json {
+  {
+    "id": "evt_2tYqGJBkKqJsVH5Zw",
+    "type": "order.paid",
+    "created_at": 1706286000,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "ord_2tYqGJBkKqJsVH5Zx",
+        "object": "order",
+        "created_at": 1706285900,
+        "updated_at": 1706286000,
+        "amount": 50000,
+        "amount_refunded": 0,
+        "payment_status": "paid",
+        "currency": "MXN",
+        "metadata": {
+          "transactionReference": "TXN-20260126-ABC123",
+          "condominiumId": "1"
+        },
+        "customer_info": {
+          "customer_id": "cus_2tYqGJBkKqJsVH5Zy",
+          "name": "Juan Pérez",
+          "email": "juan.perez@example.com",
+          "phone": "5551234567"
+        },
+        "line_items": {
+          "data": [{
+            "id": "line_2tYqGJBkKqJsVH5Zz",
+            "object": "line_item",
+            "name": "Mantenimiento mensual",
+            "unit_price": 50000,
+            "quantity": 1,
+            "parent_id": "ord_2tYqGJBkKqJsVH5Zx",
+            "metadata": {}
+          }]
+        },
+        "charges": {
+          "data": [{
+            "id": "chrg_2tYqGJBkKqJsVH5Za",
+            "object": "charge",
+            "created_at": 1706285900,
+            "currency": "MXN",
+            "amount": 50000,
+            "payment_method": {
+              "type": "oxxo_cash",
+              "reference": "98000012345678901234",
+              "expires_at": 1706545100
+            },
+            "status": "paid",
+            "paid_at": 1706286000
+          }]
+        }
+      }
+    },
+    "webhook_status": "pending"
+  }
+}
+
+docs {
+  # Webhook de Conekta - Order Paid
+  
+  Este endpoint recibe notificaciones de Conekta cuando una orden ha sido pagada exitosamente.
+  
+  ## Eventos soportados:
+  - `order.paid`: Orden pagada exitosamente
+  - `order.pending_payment`: Orden pendiente de pago
+  - `order.expired`: Orden expirada
+  - `order.canceled`: Orden cancelada
+  - `charge.paid`: Cargo pagado
+  - `charge.refunded`: Cargo reembolsado
+  
+  ## Flujo:
+  1. Conekta envía el evento al webhook
+  2. Backend valida la firma (si está configurado)
+  3. Backend procesa el evento según el tipo
+  4. Backend actualiza el estado de la transacción
+  5. Backend actualiza el Payment si aplica
+  6. Backend envía notificación por email
+  
+  ## Notas:
+  - La firma del webhook se valida usando la clave configurada en `conekta.webhook-key`
+  - El `transactionReference` en metadata es crítico para identificar la transacción local
+  - El webhook debe responder con 200 OK para que Conekta no reintente
+}

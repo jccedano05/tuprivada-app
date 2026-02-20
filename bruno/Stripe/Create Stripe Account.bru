@@ -1,0 +1,24 @@
+meta {
+  name: Create Stripe Account
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/stripe/accounts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "email": "condominio@example.com",
+    "country": "MX",
+    "type": "express",
+    "businessType": "company"
+  }
+}

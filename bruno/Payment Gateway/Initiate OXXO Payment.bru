@@ -1,0 +1,73 @@
+meta {
+  name: Initiate OXXO Payment
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/initiate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "paymentId": {{payment_id}},
+    "paymentMethod": "OXXO",
+    "email": "residente@example.com",
+    "provider": "CONEKTA",
+    "expiresInDays": 3,
+    "ipAddress": "{{client_ip}}"
+  }
+}
+
+script:post-response {
+  // Guardar la referencia de transacción para consultas posteriores
+  if (res.body.transactionReference) {
+    bru.setEnvVar("transaction_reference", res.body.transactionReference);
+  }
+  
+  // Guardar la referencia OXXO si existe
+  if (res.body.referenceNumber) {
+    bru.setEnvVar("oxxo_reference", res.body.referenceNumber);
+    console.log("Referencia OXXO:", res.body.referenceNumber);
+  }
+  
+  // Mostrar URL del código de barras si existe
+  if (res.body.barcodeUrl) {
+    console.log("Código de barras:", res.body.barcodeUrl);
+  }
+}
+
+docs {
+  # Iniciar Pago con OXXO
+  
+  Este endpoint inicia un pago con OXXO para un Payment existente.
+  
+  ## Respuesta esperada:
+  ```json
+  {
+    "transactionReference": "TXN-20260126-ABC123",
+    "gatewayTransactionId": "ord_2tYqGJBkKqJsVH5Zx",
+    "status": "PENDING",
+    "amount": 500.00,
+    "currency": "MXN",
+    "referenceNumber": "98000012345678901234",
+    "barcodeUrl": "https://s3.amazonaws.com/conekta/barcode.png",
+    "expiresAt": "2026-01-29T23:59:59",
+    "message": "Ficha OXXO generada exitosamente"
+  }
+  ```
+  
+  ## Flujo de pago OXXO:
+  1. Cliente solicita pagar con OXXO
+  2. Backend genera orden en Conekta
+  3. Conekta retorna referencia y código de barras
+  4. Cliente lleva referencia a tienda OXXO
+  5. Al pagar en OXXO, Conekta envía webhook
+  6. Backend actualiza estado del pago
+}

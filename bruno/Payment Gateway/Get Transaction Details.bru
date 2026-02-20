@@ -1,0 +1,19 @@
+meta {
+  name: Get Transaction Details
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/transactions/:transactionReference/details
+  body: none
+  auth: bearer
+}
+
+params:path {
+  transactionReference: TXN_123456
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

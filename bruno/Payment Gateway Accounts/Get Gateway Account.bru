@@ -1,0 +1,19 @@
+meta {
+  name: Get Gateway Account
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/accounts/:accountId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  accountId: 1
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

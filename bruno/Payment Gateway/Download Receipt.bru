@@ -1,0 +1,19 @@
+meta {
+  name: Download Receipt
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/transactions/:transactionReference/receipt
+  body: none
+  auth: bearer
+}
+
+params:path {
+  transactionReference: TXN_123456
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

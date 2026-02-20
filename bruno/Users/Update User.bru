@@ -1,0 +1,28 @@
+meta {
+  name: Update User
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{base_url}}/users-administration/users/:userId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  userId: {{user_id}}
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "firstName": "Juan Carlos",
+    "lastName": "Pérez García",
+    "email": "juan.updated@example.com",
+    "phone": "+525512345678"
+  }
+}

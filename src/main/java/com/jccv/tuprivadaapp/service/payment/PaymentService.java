@@ -47,6 +47,8 @@ public interface PaymentService {
 
     public void deletePaymentByResidentIdAndChargeId(Long residentId, Long chargeId);
 
+    PaymentDetailsSummaryDto getPaymentDetailsSummary(Long paymentId);
+
 
     public void updateIsPaidStatus(Long chargeId, Long residentId, Boolean isPaid);
 
@@ -62,4 +64,6 @@ public interface PaymentService {
     Double getRemainingAmountByPaymentId(Long paymentId);
 
     Receipt generatePaymentReceiptData(Long id);
+    
+    Payment getPaymentEntityById(Long id);
 }

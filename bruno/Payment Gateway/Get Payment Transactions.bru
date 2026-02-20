@@ -1,0 +1,25 @@
+meta {
+  name: Get Payment Transactions
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/transactions/payment/:paymentId?page=0&size=15
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 0
+  size: 15
+  status: SUCCEEDED
+}
+
+params:path {
+  paymentId: 1
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

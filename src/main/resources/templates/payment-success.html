@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago Acreditado</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .message {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .details-box {
+            background-color: #f9fafb;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .detail-value {
+            color: #1f2937;
+            font-weight: 500;
+            text-align: right;
+            font-size: 14px;
+        }
+        .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #10b981;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .bank-reference {
+            background-color: #ecfdf5;
+            border: 2px dashed #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            border-radius: 6px;
+        }
+        .bank-reference-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .bank-reference-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #059669;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>¡Pago Acreditado!</h1>
+        </div>
+        
+        <div class="content">
+            <p class="message">
+                Hola <strong th:text="${residentName}">Residente</strong>,
+            </p>
+            
+            <p class="message">
+                Nos complace informarte que tu pago ha sido <strong>acreditado exitosamente</strong>.
+            </p>
+            
+            <div class="amount" th:text="${amount}">$1,500.00 MXN</div>
+            
+            <div class="details-box">
+                <div class="detail-row">
+                    <span class="detail-label">Condominio</span>
+                    <span class="detail-value" th:text="${condominiumName}">Mi Condominio</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Concepto</span>
+                    <span class="detail-value" th:text="${chargeDescription}">Cuota de mantenimiento</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">ID de Pago</span>
+                    <span class="detail-value" th:text="${paymentId}">#12345</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Fecha de Pago</span>
+                    <span class="detail-value" th:text="${paymentDate}">29/12/2025 20:30:00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Referencia de Transacción</span>
+                    <span class="detail-value" th:text="${transactionReference}">TXN-12345678</span>
+                </div>
+                <div class="detail-row" th:if="${gatewayTransactionId}">
+                    <span class="detail-label">ID Conekta</span>
+                    <span class="detail-value" th:text="${gatewayTransactionId}">ord_123456</span>
+                </div>
+            </div>
+            
+            <div class="bank-reference" th:if="${bankPersonalReference}">
+                <div class="bank-reference-label">Tu Referencia Bancaria Personal</div>
+                <div class="bank-reference-value" th:text="${bankPersonalReference}">REF-123456789</div>
+            </div>
+            
+            <p class="message" style="margin-top: 25px;">
+                Este comprobante confirma que tu pago ha sido procesado correctamente. 
+                Si tienes alguna duda, puedes contactar a tu administración.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+            <p>&copy; 2025 Ayni Comunidad. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

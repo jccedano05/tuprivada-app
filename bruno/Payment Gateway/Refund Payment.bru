@@ -1,0 +1,26 @@
+meta {
+  name: Refund Payment
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/payment/:transactionReference/refund
+  body: json
+  auth: bearer
+}
+
+params:path {
+  transactionReference: TXN_123456
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "amount": 500.00,
+    "reason": "Solicitud del cliente"
+  }
+}

@@ -9,4 +9,6 @@ public interface UserService {
     User updateUser(Long userId, UserDataToShowDto userDataToShowDto);
 
     List<UserDataToShowDto> getAllUsersByCondominiumId(Long condominiumId);
+    
+    String getUserBankPersonalReference(Long userId);
 }

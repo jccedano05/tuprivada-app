@@ -1,0 +1,25 @@
+meta {
+  name: Create Contact for Condominium
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/contacts/condominiums
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "condominiumId": {{condominium_id}},
+    "name": "Plomería Express",
+    "phone": "+525587654321",
+    "email": "contacto@plomeria.com",
+    "category": "Mantenimiento"
+  }
+}

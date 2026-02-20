@@ -1,0 +1,25 @@
+meta {
+  name: Create Resident
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/residents
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "userId": {{user_id}},
+    "condominiumId": {{condominium_id}},
+    "unitNumber": "101",
+    "isOwner": true,
+    "balance": 0.0
+  }
+}

@@ -1,0 +1,99 @@
+meta {
+  name: Initiate Card Payment
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/initiate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "paymentId": {{payment_id}},
+    "paymentMethod": "CARD",
+    "email": "residente@example.com",
+    "provider": "CONEKTA",
+    "cardToken": "{{card_token}}",
+    "deviceFingerprint": "{{device_fingerprint}}",
+    "ipAddress": "{{client_ip}}"
+  }
+}
+
+script:pre-request {
+  // Nota: El cardToken debe ser generado por Conekta.js en el frontend
+  // Para pruebas, puedes usar tokens de prueba de Conekta:
+  // tok_test_visa_4242 - Tarjeta de prueba exitosa
+  // tok_test_visa_4000 - Tarjeta que requiere 3DS
+  // tok_test_mastercard_5100 - MasterCard de prueba
+  
+  if (!bru.getEnvVar("card_token")) {
+    bru.setEnvVar("card_token", "tok_test_visa_4242");
+  }
+}
+
+script:post-response {
+  // Guardar la referencia de transacción
+  if (res.body.transactionReference) {
+    bru.setEnvVar("transaction_reference", res.body.transactionReference);
+  }
+  
+  // Verificar si requiere 3DS
+  if (res.body.status === "REQUIRES_ACTION" && res.body.paymentUrl) {
+    console.log("Requiere autenticación 3DS:", res.body.paymentUrl);
+    bru.setEnvVar("3ds_url", res.body.paymentUrl);
+  }
+  
+  // Mostrar estado del pago
+  console.log("Estado del pago:", res.body.status);
+}
+
+docs {
+  # Iniciar Pago con Tarjeta
+  
+  Este endpoint inicia un pago con tarjeta usando un token generado por Conekta.js.
+  
+  ## Prerequisitos:
+  1. El frontend debe tokenizar la tarjeta usando Conekta.js
+  2. El token es de un solo uso y expira en 5 minutos
+  3. NO enviar datos de tarjeta directamente al backend
+  
+  ## Tokens de prueba:
+  - `tok_test_visa_4242`: Visa exitosa
+  - `tok_test_visa_4000`: Visa que requiere 3DS
+  - `tok_test_mastercard_5100`: MasterCard exitosa
+  - `tok_test_amex_0005`: American Express exitosa
+  
+  ## Respuesta esperada (pago exitoso):
+  ```json
+  {
+    "transactionReference": "TXN-20260126-DEF456",
+    "gatewayTransactionId": "ord_2tYqGJBkKqJsVH5Zc",
+    "status": "SUCCEEDED",
+    "amount": 500.00,
+    "currency": "MXN",
+    "message": "Pago procesado exitosamente"
+  }
+  ```
+  
+  ## Respuesta esperada (requiere 3DS):
+  ```json
+  {
+    "transactionReference": "TXN-20260126-GHI789",
+    "gatewayTransactionId": "ord_2tYqGJBkKqJsVH5Zd",
+    "status": "REQUIRES_ACTION",
+    "amount": 500.00,
+    "currency": "MXN",
+    "paymentUrl": "https://secure.conekta.com/3ds/...",
+    "requiresAction": true,
+    "nextAction": "Completar autenticación bancaria",
+    "message": "Se requiere autenticación adicional"
+  }
+  ```
+}

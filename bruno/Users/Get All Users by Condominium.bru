@@ -1,0 +1,19 @@
+meta {
+  name: Get All Users by Condominium
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/users-administration/condominiums/:condominiumId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  condominiumId: {{condominium_id}}
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

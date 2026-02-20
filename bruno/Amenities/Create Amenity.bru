@@ -1,0 +1,26 @@
+meta {
+  name: Create Amenity
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/amenities
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "name": "Alberca",
+    "description": "Alberca techada climatizada",
+    "condominiumId": {{condominium_id}},
+    "capacity": 20,
+    "pricePerHour": 100.00,
+    "isActive": true
+  }
+}

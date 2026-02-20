@@ -1,0 +1,19 @@
+meta {
+  name: Complete Onboarding
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/api/stripe/complete?accountId=acct_xxxxxxxxxxxxx
+  body: none
+  auth: bearer
+}
+
+params:query {
+  accountId: acct_xxxxxxxxxxxxx
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Get Contacts by Resident
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/contacts/residents/:residentId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  residentId: {{resident_id}}
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}

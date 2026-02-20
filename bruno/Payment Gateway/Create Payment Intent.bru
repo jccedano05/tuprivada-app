@@ -1,0 +1,27 @@
+meta {
+  name: Create Payment Intent
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/payment-intent
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "provider": "CONEKTA",
+    "condominiumId": {{condominium_id}},
+    "amount": 1500.00,
+    "currency": "MXN",
+    "description": "Pago de mantenimiento mensual",
+    "paymentId": 1,
+    "paymentMethod": "CARD"
+  }
+}

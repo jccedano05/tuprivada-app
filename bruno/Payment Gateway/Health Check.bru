@@ -1,0 +1,11 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/payment-gateway/health
+  body: none
+  auth: none
+}
